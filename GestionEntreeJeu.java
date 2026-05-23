@@ -96,6 +96,16 @@ public final class GestionEntreeJeu {
         } else if (multivers.peutSortir()) {
             // Historique vide dans un sous-monde → on remonte dans le parent
             // (équivaut à annuler l'entrée dans la boîte-monde)
+            
+            // D'abord, nettoyer la position du personnage dans le monde enfant
+            // pour éviter qu'il ne reste affiché à deux endroits
+            Position posActuelleEnfant = courant.getPositionPersonnage();
+            if (posActuelleEnfant != null && courant.estDansLimites(posActuelleEnfant)) {
+                Case caseActuelle = courant.getCase(posActuelleEnfant);
+                boolean etaitSurCible = caseActuelle instanceof Personnage p && p.estSurCible();
+                courant.setCase(posActuelleEnfant, etaitSurCible ? CaseCible.getInstance() : CaseVide.getInstance());
+            }
+            
             Multivers.ContexteNavigation contexte = multivers.sortir();
             Plateau parent = multivers.getPlateauCourant();
 
