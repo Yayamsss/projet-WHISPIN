@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="" excluding="bin/|PERSISTANCE/|.git/"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/jackson-annotations-2.17.2.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-core-2.17.2.jar"/>
+	<classpathentry kind="lib" path="lib/jackson-databind-2.17.2.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.base.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.controls.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.fxml.jar"/>
+	<classpathentry kind="lib" path="/usr/share/openjfx/lib/javafx.graphics.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
