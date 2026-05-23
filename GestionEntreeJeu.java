@@ -105,9 +105,6 @@ public final class GestionEntreeJeu {
                 boolean etaitSurCible = caseActuelle instanceof Personnage p && p.estSurCible();
                 courant.setCase(posActuelleEnfant, etaitSurCible ? CaseCible.getInstance() : CaseVide.getInstance());
             }
-            // Réinitialiser la position du personnage dans le monde enfant à null
-            // pour marquer qu'il n'y a plus de personnage dans ce monde
-            courant.reinitialiserPositionPersonnage();
             
             Multivers.ContexteNavigation contexte = multivers.sortir();
             Plateau parent = multivers.getPlateauCourant();
