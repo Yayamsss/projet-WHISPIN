@@ -97,8 +97,7 @@ public final class GestionEntreeJeu {
             // Historique vide dans un sous-monde → on remonte dans le parent
             // (équivaut à annuler l'entrée dans la boîte-monde)
             
-            // D'abord, nettoyer COMPLÈTEMENT la position du personnage dans le monde enfant
-            // pour éviter qu'il ne reste affiché à deux endroits ou que l'état soit corrompu
+            // Nettoyer la position actuelle du personnage dans le monde enfant
             Position posActuelleEnfant = courant.getPositionPersonnage();
             if (posActuelleEnfant != null && courant.estDansLimites(posActuelleEnfant)) {
                 Case caseActuelle = courant.getCase(posActuelleEnfant);
@@ -106,20 +105,19 @@ public final class GestionEntreeJeu {
                 courant.setCase(posActuelleEnfant, etaitSurCible ? CaseCible.getInstance() : CaseVide.getInstance());
             }
             
+            // Sortir du monde enfant vers le parent
             Multivers.ContexteNavigation contexte = multivers.sortir();
             Plateau parent = multivers.getPlateauCourant();
 
-            // Replacer le joueur là où il était dans le monde parent (sur la boîte)
+            // Replacer le joueur devant la boîte-monde (position d'avant l'entrée)
             Position posBoite = contexte.positionBoite;
             if (parent.estDansLimites(posBoite)) {
-                Case caseBoite = parent.getCase(posBoite);
-                // La boîte-monde est encore là, on place le joueur juste avant
                 Direction dirRetour = contexte.directionEntree;
                 Position avantBoite = posBoite.deplacer(dirRetour.getOpposee());
                 if (parent.estDansLimites(avantBoite) && parent.getCase(avantBoite).estTraversable()) {
                     parent.teleporterPersonnage(avantBoite);
                 } else {
-                    // Fallback : n'importe quelle case libre autour de la boîte
+                    // Fallback: chercher une case libre autour
                     Position libre = trouverCaseLibreAutour(parent, posBoite);
                     if (libre != null) parent.teleporterPersonnage(libre);
                 }
