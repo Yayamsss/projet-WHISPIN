@@ -3,19 +3,19 @@
  * Chaque direction contient son delta en x et en y.
  */
 public enum Direction {
-    
+
     /** vers le haut (y diminue) */
     HAUT(0, -1, "Haut", "↑"),
-    
+
     /** vers le bas (y augmente) */
     BAS(0, 1, "Bas", "↓"),
-    
+
     /** vers la gauche (x diminue) */
     GAUCHE(-1, 0, "Gauche", "←"),
-    
+
     /** vers la droite (x augmente) */
     DROITE(1, 0, "Droite", "→");
-    
+
     /** Déplacement sur l'axe x. */
     private final int deltaX;
     
@@ -60,22 +60,6 @@ public enum Direction {
     public int getDeltaY() {
         return deltaY;
     }
-
-    /**
-     * @deprecated Utiliser getDeltaX().
-     */
-    @Deprecated
-    public int getgX() {
-        return getDeltaX();
-    }
-
-    /**
-     * @deprecated Utiliser getDeltaY().
-     */
-    @Deprecated
-    public int getgY() {
-        return getDeltaY();
-    }
     
     /**
      * Retourne le nom de la direction.
@@ -102,14 +86,19 @@ public enum Direction {
      */
     public Direction getOpposee() {
         switch (this) {
-            case HAUT: return BAS;
-            case BAS: return HAUT;
-            case GAUCHE: return DROITE;
-            case DROITE: return GAUCHE;
-            default: throw new IllegalStateException("Direction inconnue");
+            case HAUT:
+                return BAS;
+            case BAS:
+                return HAUT;
+            case GAUCHE:
+                return DROITE;
+            case DROITE:
+                return GAUCHE;
+            default:
+                throw new IllegalStateException("Direction inconnue");
         }
     }
-    
+
     /**
      * Indique si la direction est horizontale.
      *
@@ -118,7 +107,7 @@ public enum Direction {
     public boolean estHorizontale() {
         return this == GAUCHE || this == DROITE;
     }
-    
+
     /**
      * Indique si la direction est verticale.
      *
@@ -137,14 +126,19 @@ public enum Direction {
      */
     public static Direction fromLettre(char lettre) {
         switch (Character.toLowerCase(lettre)) {
-            case 'u': return HAUT;
-            case 'd': return BAS;
-            case 'l': return GAUCHE;
-            case 'r': return DROITE;
-            default: throw new IllegalArgumentException("Lettre de direction invalide : " + lettre);
+            case 'u':
+                return HAUT;
+            case 'd':
+                return BAS;
+            case 'l':
+                return GAUCHE;
+            case 'r':
+                return DROITE;
+            default:
+                throw new IllegalArgumentException("Lettre de direction invalide : " + lettre);
         }
     }
-    
+
     /**
      * Convertit cette direction en lettre (format Sokoban: u, d, l, r).
      *
@@ -152,14 +146,19 @@ public enum Direction {
      */
     public char toLettre() {
         switch (this) {
-            case HAUT: return 'u';
-            case BAS: return 'd';
-            case GAUCHE: return 'l';
-            case DROITE: return 'r';
-            default: throw new IllegalStateException("Direction inconnue");
+            case HAUT:
+                return 'u';
+            case BAS:
+                return 'd';
+            case GAUCHE:
+                return 'l';
+            case DROITE:
+                return 'r';
+            default:
+                throw new IllegalStateException("Direction inconnue");
         }
     }
-    
+
     /**
      * Retourne une représentation textuelle de la direction.
      *

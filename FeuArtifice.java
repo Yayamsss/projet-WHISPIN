@@ -3,6 +3,9 @@ import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 
+/**
+ * Gère un effet de feu d'artifice temporaire affiché après une victoire.
+ */
 public class FeuArtifice {
     private static final double DUREE_FEU_ARTIFICE_SECONDES = 4.0;
     private static final double DUREE_EXPLOSION_SECONDES = 1.1;
@@ -29,6 +32,14 @@ public class FeuArtifice {
     private long debutVictoireNs = 0L;
     private long dernierLancementExplosionNs = 0L;
 
+    /**
+     * Met à jour l'état des explosions en fonction du temps courant.
+     *
+     * @param victoire indique si l'état victoire est actif
+     * @param largeurScene largeur actuelle de la scène
+     * @param hauteurScene hauteur actuelle de la scène
+     * @param maintenantNs horodatage courant en nanosecondes
+     */
     public void mettreAJour(boolean victoire, double largeurScene, double hauteurScene, long maintenantNs) {
         if (!victoire) {
             reinitialiser();
@@ -48,6 +59,12 @@ public class FeuArtifice {
         explosions.removeIf(explosion -> progressionExplosion(explosion, maintenantNs) >= 1.0);
     }
 
+    /**
+     * Indique si l'effet peut être terminé.
+     *
+     * @param maintenantNs horodatage courant en nanosecondes
+     * @return true si la durée totale est dépassée, false sinon
+     */
     public boolean doitFermer(long maintenantNs) {
         if (debutVictoireNs == 0L) {
             return false;
@@ -56,6 +73,12 @@ public class FeuArtifice {
         return tempsVictoire >= DUREE_FEU_ARTIFICE_SECONDES;
     }
 
+    /**
+     * Dessine l'ensemble des explosions actives.
+     *
+     * @param gc contexte graphique JavaFX
+     * @param maintenantNs horodatage courant en nanosecondes
+     */
     public void dessiner(GraphicsContext gc, long maintenantNs) {
         for (Explosion explosion : explosions) {
             double progression = progressionExplosion(explosion, maintenantNs);

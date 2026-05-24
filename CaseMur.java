@@ -1,14 +1,14 @@
-/* Classe représentant un mur dans le jeu.
- * Un mur est infranchissable et ne peut pas être poussé.
- */
-
 import javafx.scene.paint.Color;
 
+/**
+ * Représente une case mur du plateau.
+ */
 public class CaseMur extends Case {
-    
     /**
-     * @requires x>=0
-     * @requires y>=0
+     * Construit une case mur.
+     *
+     * @param x abscisse de la case
+     * @param y ordonnée de la case
      */
     public CaseMur(int x, int y) {
         super(x, y);

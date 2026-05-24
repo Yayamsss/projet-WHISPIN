@@ -1,14 +1,14 @@
-/* Classe représentant une case contenant une boîte dans le jeu.
- * Une boîte peut être poussée par le personnage si elle n'est pas sur un mur.
- */
-
 import javafx.scene.paint.Color;
 
+/**
+ * Représente une case contenant une boîte.
+ */
 public class CaseBoite extends Case {
-    
     /**
-     * @requires x>=0
-     * @requires y>=0
+     * Construit une case boîte.
+     *
+     * @param x abscisse de la case
+     * @param y ordonnée de la case
      */
     public CaseBoite(int x, int y) {
         super(x, y);

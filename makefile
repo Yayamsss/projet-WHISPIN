@@ -12,9 +12,9 @@ endif
 JAVAFX_MODULES ?= javafx.controls,javafx.fxml
 JAVA_RUN_OPTS ?= --enable-native-access=javafx.graphics
 
-SRC := $(shell find . -name "*.java")
+SRC := $(shell find . -name "*.java" -not -path "./Quantum-main/*" -not -path "./bin/*")
 BIN := bin
-MAIN := interface_main
+MAIN := InterfacePrincipale
 
 .PHONY: all build run clean jar help
 

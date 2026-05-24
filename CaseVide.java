@@ -1,14 +1,14 @@
-/* Classe représentant une case vide dans le jeu.
- * Une case vide est traversable mais ne contient aucun objet particulier.
- */
-
 import javafx.scene.paint.Color;
 
+/**
+ * Représente une case vide du plateau.
+ */
 public class CaseVide extends Case {
-    
     /**
-     * @requires x>=0
-     * @requires y>=0
+     * Construit une case vide.
+     *
+     * @param x abscisse de la case
+     * @param y ordonnée de la case
      */
     public CaseVide(int x, int y) {
         super(x, y);

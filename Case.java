@@ -1,64 +1,135 @@
-/*classe qui va nous permettre de définir les cases d'une map
-chaque type de case est ensuite défini dans des sous classes
-chaque case a des coordonnées*/
-
 import javafx.scene.paint.Color;
 
-public class Case{
-    private int x;
-    private int y;
-    
+/**
+ * Représente une case générique du plateau.
+ *
+ * <p>Chaque type concret de case (mur, vide, boîte, personnage) spécialise
+ * ce comportement en redéfinissant les méthodes nécessaires.</p>
+ */
+public class Case {
+    private final int x;
+    private final int y;
+
     /**
-     * @requires x>=0
-     * @requires y>=0
-     * 
+     * Construit une case à une position donnée.
+     *
+     * @param x coordonnée en abscisse (>= 0)
+     * @param y coordonnée en ordonnée (>= 0)
+     * @throws IllegalArgumentException si une coordonnée est négative
      */
-    public Case(int x, int y){
-        if(x<0 || y<0){
-            throw new IllegalArgumentException("les coordonnées doivent être positive");
+    public Case(int x, int y) {
+        if (x < 0 || y < 0) {
+            throw new IllegalArgumentException("Les coordonnées doivent être positives.");
         }
         this.x = x;
         this.y = y;
     }
 
     /**
-     * nous dit si la case est un mur ou non
+     * Indique si la case est un mur.
+     *
+     * @return true si la case est un mur, false sinon
      */
-    public boolean estMur(){return false;}
+    public boolean estMur() {
+        return false;
+    }
 
     /**
-     * nous dit si la case est une boite ou non
+     * Indique si la case contient une boîte.
+     *
+     * @return true si la case contient une boîte, false sinon
      */
-    public boolean estBoite(){return false;}
+    public boolean estBoite() {
+        return false;
+    }
 
     /**
-     * nous dit si la case est vide ou non
+     * Indique si la case est vide.
+     *
+     * @return true si la case est vide, false sinon
      */
-    public boolean estVide(){return false;}
+    public boolean estVide() {
+        return false;
+    }
 
     /**
-     * nous dit si la case est une cible ou non
+     * Indique si la case est une cible.
+     *
+     * @return true si la case est une cible, false sinon
      */
-    public boolean estCible(){return false;}
-
-     /**
-     * nous dit si le personnage est sur une case vide ou non
-     */
-    public boolean estPersonnageCible(){return false;}
-
-     /**
-     * nous dit si la boite est sur une cible ou non
-     */
-    public boolean estBoiteCible(){return false;}
+    public boolean estCible() {
+        return false;
+    }
 
     /**
-     * nous dit si le personnage ou une boite peut se deplacer sur la case
+     * Indique si la case contient un personnage (potentiellement sur cible).
+     *
+     * @return true si la case contient le personnage, false sinon
      */
-    public boolean estTraversable(){return false;}
+    public boolean estPersonnageCible() {
+        return false;
+    }
 
-    public boolean estPoussable(){return false;}
+    /**
+     * Indique si la case contient une boîte sur une cible.
+     *
+     * @return true si la boîte est sur une cible, false sinon
+     */
+    public boolean estBoiteCible() {
+        return false;
+    }
 
-    public char getSymbole(){return ' ';}
+    /**
+     * Indique si la case peut être traversée.
+     *
+     * @return true si traversable, false sinon
+     */
+    public boolean estTraversable() {
+        return false;
+    }
 
-    public Color getCouleurSol(){return Color.web("#d62828");}
+    /**
+     * Indique si la case peut être poussée.
+     *
+     * @return true si la case est poussable, false sinon
+     */
+    public boolean estPoussable() {
+        return false;
+    }
+
+    /**
+     * Retourne le symbole ASCII associé à la case.
+     *
+     * @return symbole ASCII de la case
+     */
+    public char getSymbole() {
+        return ' ';
+    }
+
+    /**
+     * Retourne la couleur de fond utilisée pour l'affichage de la case.
+     *
+     * @return couleur de sol de la case
+     */
+    public Color getCouleurSol() {
+        return Color.web("#d62828");
+    }
+
+    /**
+     * Retourne l'abscisse de la case.
+     *
+     * @return abscisse de la case
+     */
+    public int getX() {
+        return x;
+    }
+
+    /**
+     * Retourne l'ordonnée de la case.
+     *
+     * @return ordonnée de la case
+     */
+    public int getY() {
+        return y;
+    }
 }

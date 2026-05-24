@@ -1,14 +1,14 @@
-/* Classe représentant une case contenant un personnage dans le jeu.
- * Le personnage peut se déplacer sur les cases vides et pousser les boîtes.
- */
-
 import javafx.scene.paint.Color;
 
+/**
+ * Représente une case contenant le personnage.
+ */
 public class CasePersonnage extends Case {
-    
     /**
-     * @requires x>=0
-     * @requires y>=0
+     * Construit une case personnage.
+     *
+     * @param x abscisse de la case
+     * @param y ordonnée de la case
      */
     public CasePersonnage(int x, int y) {
         super(x, y);
