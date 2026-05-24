@@ -1,0 +1,13 @@
+# Build outputs
+bin/
+*.class
+*.jar
+
+# OS files
+.DS_Store
+
+# Temporary files
+effacer_apres
+
+# Sauvegardes
+sauvegardes/
