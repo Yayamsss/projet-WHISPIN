@@ -1,0 +1,38 @@
+```
+# Compiled Java files
+*.class
+
+# Dependencies
+lib/
+libs/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build artifacts
+target/
+build/
+dist/
+
+# Temporary files
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+test-results/
+```
