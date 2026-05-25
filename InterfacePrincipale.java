@@ -85,14 +85,14 @@ public class InterfacePrincipale extends Application {
         Button btnNiveau = Menu.creerBoutonMenu("Niveau");
         Button btnRegles = Menu.creerBoutonMenu("Regles du jeu");
         Button btnSauvegarde = Menu.creerBoutonMenu("Sauvegarde");
-        Button btnParamettre = Menu.creerBoutonMenu("Paramettre");
+        Button btnParametres = Menu.creerBoutonMenu("Parametres");
         Button btnQuitter = Menu.creerBoutonMenu("Quitter");
 
         boutonsMenuPrincipal = List.of(
             btnNiveau,
             btnRegles,
             btnSauvegarde,
-            btnParamettre,
+            btnParametres,
             btnQuitter
         );
         indexBoutonMenuPrincipal = 0;
