@@ -369,7 +369,10 @@ public class LogiqueSokoban {
 
         nettoyerJoueurMonde(enfant);
 
-        int[] spawn = trouverPremiereCaseVide(enfant);
+        int[] spawn = trouverSpawnEntree(enfant);
+        if (spawn == null) {
+            spawn = trouverPremiereCaseVide(enfant);
+        }
         if (spawn == null) {
             spawn = trouverPremiereCaseLibre(enfant);
             if (spawn == null) {
@@ -454,6 +457,128 @@ public class LogiqueSokoban {
             }
         }
         return null;
+    }
+
+    /**
+     * Cherche une case de spawn pertinente: avec poussee atteignable si le monde contient des objets,
+     * sinon avec au moins une possibilite de circulation/sortie.
+     */
+    private int[] trouverSpawnEntree(char[][] grille) {
+        if (grille == null) {
+            return null;
+        }
+
+        boolean contientObjetPoussable = contientObjetPoussable(grille);
+        int[] meilleurSpawn = null;
+        int meilleurScore = -1;
+
+        for (int y = 0; y < grille.length; y++) {
+            for (int x = 0; x < grille[y].length; x++) {
+                if (!estLibre(grille[y][x])) {
+                    continue;
+                }
+
+                int score = evaluerQualiteSpawn(grille, x, y, contientObjetPoussable);
+                if (score > meilleurScore) {
+                    meilleurScore = score;
+                    meilleurSpawn = new int[] {x, y};
+                }
+            }
+        }
+
+        return meilleurScore > 0 ? meilleurSpawn : null;
+    }
+
+    /**
+     * Evalue la qualite d'un spawn en fonction des actions atteignables depuis sa zone accessible.
+     */
+    private int evaluerQualiteSpawn(char[][] grille, int x, int y, boolean contientObjetPoussable) {
+        int[][] directions = new int[][] {
+            {0, -1},
+            {0, 1},
+            {-1, 0},
+            {1, 0}
+        };
+
+        boolean[][] visites = new boolean[grille.length][];
+        for (int i = 0; i < grille.length; i++) {
+            visites[i] = new boolean[grille[i].length];
+        }
+
+        java.util.ArrayDeque<int[]> file = new java.util.ArrayDeque<>();
+        file.add(new int[] {x, y});
+        visites[y][x] = true;
+
+        int casesAccessibles = 0;
+        int pousseesPossibles = 0;
+        boolean sortiePossible = false;
+
+        while (!file.isEmpty()) {
+            int[] position = file.removeFirst();
+            int px = position[0];
+            int py = position[1];
+            casesAccessibles++;
+
+            for (int[] direction : directions) {
+                int nx = px + direction[0];
+                int ny = py + direction[1];
+
+                if (!dansGrille(grille, nx, ny)) {
+                    sortiePossible = true;
+                    continue;
+                }
+
+                char destination = grille[ny][nx];
+                if (destination == '#' && estMurDeBordure(grille, nx, ny)) {
+                    sortiePossible = true;
+                }
+
+                if (estLibre(destination) && !visites[ny][nx]) {
+                    visites[ny][nx] = true;
+                    file.add(new int[] {nx, ny});
+                    continue;
+                }
+
+                if (!estObjetPoussable(destination)) {
+                    continue;
+                }
+
+                int bx = nx + direction[0];
+                int by = ny + direction[1];
+                if (dansGrille(grille, bx, by) && estLibre(grille[by][bx])) {
+                    pousseesPossibles++;
+                }
+            }
+        }
+
+        if (contientObjetPoussable) {
+            if (pousseesPossibles == 0) {
+                return 0;
+            }
+            return 1000 + pousseesPossibles * 10 + casesAccessibles;
+        }
+
+        if (!sortiePossible && casesAccessibles <= 1) {
+            return 0;
+        }
+
+        return (sortiePossible ? 500 : 100) + casesAccessibles;
+    }
+
+    private boolean contientObjetPoussable(char[][] grille) {
+        if (grille == null) {
+            return false;
+        }
+
+        for (char[] ligne : grille) {
+            for (char cellule : ligne) {
+                if (estObjetPoussable(cellule)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     private boolean estLibre(char c) {
