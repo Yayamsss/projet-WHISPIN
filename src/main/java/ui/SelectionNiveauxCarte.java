@@ -62,8 +62,8 @@ public final class SelectionNiveauxCarte {
      *
      * @param proprietaire stage principal
      * @param niveauActuel niveau courant pour positionner le personnage
-     * @param onSelection callback appelé avec le niveau choisi
-     * @param onCancel callback appelé à l'annulation
+        * @param onSelection fonction appelée avec le niveau choisi
+        * @param onCancel fonction appelée à l'annulation
      */
     public static void ouvrir(Stage proprietaire, String niveauActuel, Consumer<String> onSelection, Runnable onCancel) {
         if (proprietaire == null) {

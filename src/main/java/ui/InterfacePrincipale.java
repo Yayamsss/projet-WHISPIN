@@ -80,51 +80,7 @@ public class InterfacePrincipale extends Application {
         canvasPlateau.setMouseTransparent(false);
         racinePrincipale.getChildren().add(canvasPlateau);
 
-        menuPrincipal = Menu.creerConteneurMenu();
-        Text titre = Menu.creerTitre("WHISPIN");
-        Button btnNiveau = Menu.creerBoutonMenu("Niveau");
-        Button btnRegles = Menu.creerBoutonMenu("Regles du jeu");
-        Button btnSauvegarde = Menu.creerBoutonMenu("Sauvegarde");
-        Button btnParamettre = Menu.creerBoutonMenu("Paramettre");
-        Button btnQuitter = Menu.creerBoutonMenu("Quitter");
-
-        boutonsMenuPrincipal = List.of(
-            btnNiveau,
-            btnRegles,
-            btnSauvegarde,
-            btnParamettre,
-            btnQuitter
-        );
-        indexBoutonMenuPrincipal = 0;
-
-        for (int i = 0; i < boutonsMenuPrincipal.size(); i++) {
-            final int index = i;
-            Button bouton = boutonsMenuPrincipal.get(i);
-            bouton.setOnMouseEntered(event -> indexBoutonMenuPrincipal = index);
-            bouton.focusedProperty().addListener((obs, oldValue, isFocused) -> {
-                if (isFocused) {
-                    indexBoutonMenuPrincipal = index;
-                }
-            });
-        }
-
-        btnNiveau.setOnAction(event -> chargerNiveauSelectionne());
-        btnRegles.setOnAction(event -> ouvrirSceneRegles());
-        btnSauvegarde.setOnAction(event -> ouvrirSceneSauvegarde());
-        btnParamettre.setOnAction(event -> gererParametres());
-        btnQuitter.setOnAction(event -> {
-            sauvegarderEtatCourantAutomatiqueSiPossible();
-            Platform.exit();
-        });
-
-        menuPrincipal.getChildren().addAll(
-            titre,
-            btnNiveau,
-            btnRegles,
-            btnSauvegarde,
-            btnParamettre,
-            btnQuitter
-        );
+        initialiserMenuPrincipal();
 
         racinePrincipale.getChildren().add(menuPrincipal);
         StackPane.setAlignment(menuPrincipal, Pos.CENTER_LEFT);
@@ -148,94 +104,8 @@ public class InterfacePrincipale extends Application {
         mettreAJourVisibilitePlateau();
 
         scenePrincipale = new Scene(racinePrincipale, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-        scenePrincipale.setOnKeyPressed(event -> {
-            if (transitionVictoireEnCours) {
-                event.consume();
-                return;
-            }
-
-            if (controleurPartie != null) {
-                controleurPartie.arreterDeplacementAutomatique();
-            }
-
-            if (event.getCode() == KeyCode.ESCAPE && modeJeuActif) {
-                quitterPartieEnCours();
-                event.consume();
-                return;
-            }
-
-            if (event.isControlDown() && event.getCode() == KeyCode.S) {
-                if (modeJeuActif) {
-                    sauvegarderEtatCourantPersonnalise();
-                }
-                event.consume();
-                return;
-            }
-
-            if (event.isControlDown() && event.getCode() == KeyCode.Z) {
-                if (moteurJeu != null && moteurJeu.annulerDernierCoup()) {
-                    plateauActuel = moteurJeu.exporterPlateau();
-                    dessinerPlateauActuel();
-                }
-                event.consume();
-                return;
-            }
-
-            if (!modeJeuActif) {
-                return;
-            }
-
-            Direction direction = convertirToucheEnDirection(event.getCode());
-            if (direction == null || moteurJeu == null) {
-                return;
-            }
-
-            Animation.orienterPersonnage(direction);
-
-            if (moteurJeu.deplacer(direction)) {
-                Animation.avancerAnimationPersonnage(direction);
-                plateauActuel = moteurJeu.exporterPlateau();
-                dessinerPlateauActuel();
-                if (moteurJeu.estVictoire()) {
-                    sauvegarderEtatCourantAutomatiqueSiPossible();
-                    lancerAnimationVictoire(this::afficherSceneVictoire);
-                }
-            } else {
-                dessinerPlateauActuel();
-            }
-        });
-
-        NavigationClavierUI.installerNavigationBoutons(
-            scenePrincipale,
-            boutonsMenuPrincipal,
-            null,
-            () -> !modeJeuActif && menuPrincipal != null && menuPrincipal.isVisible(),
-            true
-        );
-
-        canvasPlateau.widthProperty().bind(scenePrincipale.widthProperty().multiply(0.42));
-        canvasPlateau.heightProperty().bind(scenePrincipale.heightProperty().multiply(0.80));
-        canvasPlateau.widthProperty().addListener((obs, oldVal, newVal) -> dessinerPlateauActuel());
-        canvasPlateau.heightProperty().addListener((obs, oldVal, newVal) -> dessinerPlateauActuel());
-        controleurPartie = new ControleurPartie(
-            canvasPlateau,
-            () -> modeJeuActif,
-            () -> transitionVictoireEnCours,
-            () -> plateauActuel,
-            () -> moteurJeu,
-            () -> {
-                if (moteurJeu != null) {
-                    plateauActuel = moteurJeu.exporterPlateau();
-                }
-                dessinerPlateauActuel();
-            },
-            () -> {
-                sauvegarderEtatCourantAutomatiqueSiPossible();
-                lancerAnimationVictoire(this::afficherSceneVictoire);
-            }
-        );
-        controleurPartie.installerGestionClic();
+        initialiserNavigationClavierScenePrincipale();
+        initialiserControleurEtBindingsCanvas();
         dessinerPlateauActuel();
 
         if (backgroundView != null) {
@@ -258,6 +128,147 @@ public class InterfacePrincipale extends Application {
 
         // Sous Linux/Wayland, une demande de plein écran avant show() peut être ignorée.
         activerPleinEcranEtFocus();
+    }
+
+    private void initialiserMenuPrincipal() {
+        menuPrincipal = Menu.creerConteneurMenu();
+        Text titre = Menu.creerTitre("WHISPIN");
+        Button btnNiveau = Menu.creerBoutonMenu("Niveau");
+        Button btnRegles = Menu.creerBoutonMenu("Regles du jeu");
+        Button btnSauvegarde = Menu.creerBoutonMenu("Sauvegarde");
+        Button btnParametres = Menu.creerBoutonMenu("Parametres");
+        Button btnQuitter = Menu.creerBoutonMenu("Quitter");
+
+        boutonsMenuPrincipal = List.of(
+            btnNiveau,
+            btnRegles,
+            btnSauvegarde,
+            btnParametres,
+            btnQuitter
+        );
+        indexBoutonMenuPrincipal = 0;
+
+        for (int i = 0; i < boutonsMenuPrincipal.size(); i++) {
+            final int index = i;
+            Button bouton = boutonsMenuPrincipal.get(i);
+            bouton.setOnMouseEntered(event -> indexBoutonMenuPrincipal = index);
+            bouton.focusedProperty().addListener((obs, oldValue, isFocused) -> {
+                if (isFocused) {
+                    indexBoutonMenuPrincipal = index;
+                }
+            });
+        }
+
+        btnNiveau.setOnAction(event -> chargerNiveauSelectionne());
+        btnRegles.setOnAction(event -> ouvrirSceneRegles());
+        btnSauvegarde.setOnAction(event -> ouvrirSceneSauvegarde());
+        btnParametres.setOnAction(event -> gererParametres());
+        btnQuitter.setOnAction(event -> {
+            sauvegarderEtatCourantAutomatiqueSiPossible();
+            Platform.exit();
+        });
+
+        menuPrincipal.getChildren().addAll(
+            titre,
+            btnNiveau,
+            btnRegles,
+            btnSauvegarde,
+            btnParametres,
+            btnQuitter
+        );
+    }
+
+    private void initialiserNavigationClavierScenePrincipale() {
+        scenePrincipale.setOnKeyPressed(this::gererToucheScenePrincipale);
+        NavigationClavierUI.installerNavigationBoutons(
+            scenePrincipale,
+            boutonsMenuPrincipal,
+            null,
+            () -> !modeJeuActif && menuPrincipal != null && menuPrincipal.isVisible(),
+            true
+        );
+    }
+
+    private void initialiserControleurEtBindingsCanvas() {
+        canvasPlateau.widthProperty().bind(scenePrincipale.widthProperty().multiply(0.42));
+        canvasPlateau.heightProperty().bind(scenePrincipale.heightProperty().multiply(0.80));
+        canvasPlateau.widthProperty().addListener((obs, oldVal, newVal) -> dessinerPlateauActuel());
+        canvasPlateau.heightProperty().addListener((obs, oldVal, newVal) -> dessinerPlateauActuel());
+
+        controleurPartie = new ControleurPartie(
+            canvasPlateau,
+            () -> modeJeuActif,
+            () -> transitionVictoireEnCours,
+            () -> plateauActuel,
+            () -> moteurJeu,
+            () -> {
+                if (moteurJeu != null) {
+                    plateauActuel = moteurJeu.exporterPlateau();
+                }
+                dessinerPlateauActuel();
+            },
+            () -> {
+                sauvegarderEtatCourantAutomatiqueSiPossible();
+                lancerAnimationVictoire(this::afficherSceneVictoire);
+            }
+        );
+        controleurPartie.installerGestionClic();
+    }
+
+    private void gererToucheScenePrincipale(KeyEvent event) {
+        if (transitionVictoireEnCours) {
+            event.consume();
+            return;
+        }
+
+        if (controleurPartie != null) {
+            controleurPartie.arreterDeplacementAutomatique();
+        }
+
+        if (event.getCode() == KeyCode.ESCAPE && modeJeuActif) {
+            quitterPartieEnCours();
+            event.consume();
+            return;
+        }
+
+        if (event.isControlDown() && event.getCode() == KeyCode.S) {
+            if (modeJeuActif) {
+                sauvegarderEtatCourantDepuisScene();
+            }
+            event.consume();
+            return;
+        }
+
+        if (event.isControlDown() && event.getCode() == KeyCode.Z) {
+            if (moteurJeu != null && moteurJeu.annulerDernierCoup()) {
+                plateauActuel = moteurJeu.exporterPlateau();
+                dessinerPlateauActuel();
+            }
+            event.consume();
+            return;
+        }
+
+        if (!modeJeuActif) {
+            return;
+        }
+
+        Direction direction = convertirToucheEnDirection(event.getCode());
+        if (direction == null || moteurJeu == null) {
+            return;
+        }
+
+        Animation.orienterPersonnage(direction);
+        if (moteurJeu.deplacer(direction)) {
+            Animation.avancerAnimationPersonnage(direction);
+            plateauActuel = moteurJeu.exporterPlateau();
+            dessinerPlateauActuel();
+            if (moteurJeu.estVictoire()) {
+                sauvegarderEtatCourantAutomatiqueSiPossible();
+                lancerAnimationVictoire(this::afficherSceneVictoire);
+            }
+        } else {
+            dessinerPlateauActuel();
+        }
     }
 
     public static void main(String[] args) {
@@ -452,7 +463,7 @@ public class InterfacePrincipale extends Application {
     private void gererParametres() {
         List<String> personnages = Animation.getPersonnagesDisponibles();
         if (personnages.isEmpty()) {
-            DialoguesMenu.afficherInformation("Paramettre", "Aucun personnage trouve dans assets/player.");
+            DialoguesMenu.afficherInformation("Parametres", "Aucun personnage trouve dans assets/player.");
             return;
         }
 
@@ -473,7 +484,7 @@ public class InterfacePrincipale extends Application {
             Animation.getPersonnageActuel(),
             choisi -> {
                 if (!Animation.selectionnerPersonnage(choisi)) {
-                    DialoguesMenu.afficherInformation("Paramettre", "Impossible de charger le personnage choisi.");
+                    DialoguesMenu.afficherInformation("Parametres", "Impossible de charger le personnage choisi.");
                     return;
                 }
                 dessinerPlateauActuel();

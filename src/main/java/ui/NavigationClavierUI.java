@@ -9,7 +9,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 
 /**
- * Utilitaires de navigation clavier reutilisables pour les scenes JavaFX.
+ * Utilitaires de navigation clavier réutilisables pour les scènes JavaFX.
  */
 public final class NavigationClavierUI {
     private NavigationClavierUI() {
@@ -17,6 +17,10 @@ public final class NavigationClavierUI {
 
     /**
      * Installe une navigation clavier cyclique sur une liste de boutons.
+     *
+     * @param scene scène cible
+     * @param boutons boutons navigables
+     * @param onEscape action à exécuter sur Échap
      */
     public static void installerNavigationBoutons(Scene scene, List<Button> boutons, Runnable onEscape) {
         installerNavigationBoutons(scene, boutons, onEscape, () -> true, false);
@@ -24,6 +28,12 @@ public final class NavigationClavierUI {
 
     /**
      * Installe une navigation clavier cyclique sur une liste de boutons.
+     *
+     * @param scene scène cible
+     * @param boutons boutons navigables
+     * @param onEscape action à exécuter sur Échap
+     * @param navigationActive condition d'activation de la navigation
+     * @param supportAzerty active les touches ZQSD/WASD en complément
      */
     public static void installerNavigationBoutons(
         Scene scene,
@@ -108,7 +118,16 @@ public final class NavigationClavierUI {
     }
 
     /**
-     * Installe une navigation clavier pour une grille logique d'elements.
+        * Installe une navigation clavier pour une grille logique d'éléments.
+        *
+        * @param scene scène cible
+        * @param nombreElements nombre d'éléments navigables
+        * @param colonnes nombre de colonnes de la grille logique
+        * @param indexInitial index initial de sélection
+        * @param onSelection action appelée lors d'un changement de sélection
+        * @param onValider action appelée sur validation
+        * @param onEscape action appelée sur Échap
+        * @param supportAzerty active les touches ZQSD/WASD en complément
      */
     public static void installerNavigationGrille(
         Scene scene,

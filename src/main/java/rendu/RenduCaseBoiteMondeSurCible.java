@@ -3,7 +3,7 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 /**
- * Rendu d'une boîte-monde sur cible avec sprite portal.
+ * Rendu d'une boîte-monde sur cible avec la texture de portail.
  */
 public class RenduCaseBoiteMondeSurCible implements RenduCase {
     @Override

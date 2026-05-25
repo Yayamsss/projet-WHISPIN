@@ -20,6 +20,13 @@ public final class SceneVictoire {
 
     /**
      * Crée la scène de victoire avec actions de navigation.
+        *
+        * @param stagePrincipal fenêtre principale
+        * @param coups nombre de coups effectués
+        * @param niveauSuivant identifiant du niveau suivant, ou null s'il n'existe pas
+        * @param actionProchain action de passage au niveau suivant
+        * @param actionRetourMenu action de retour au menu principal
+        * @return scène de victoire prête à afficher
      */
     public static Scene creer(
         Stage stagePrincipal,

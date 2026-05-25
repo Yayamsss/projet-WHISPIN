@@ -3,7 +3,7 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 /**
- * Rendu de la case personnage avec sprite directionnel.
+ * Rendu de la case personnage avec texture directionnelle.
  */
 public class RenduCasePersonnage implements RenduCase {
     @Override

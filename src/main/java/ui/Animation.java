@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 import javafx.scene.image.Image;
 
 /**
- * Centralise le chargement des sprites du projet.
+ * Centralise le chargement des textures du projet.
  */
 public final class Animation {
     private static final int NOMBRE_FRAMES_MARCHE = 3;
@@ -279,7 +279,7 @@ public final class Animation {
                 + ".png";
             Image frame = chargerDepuisCandidats(chemin);
 
-            // Certains packs n'ont pas toutes les frames (ex: index 0 manquant).
+            // Certains jeux de textures n'ont pas toutes les images (ex: index 0 manquant).
             if (frame == null) {
                 for (int secours = 0; secours < NOMBRE_FRAMES_MARCHE; secours++) {
                     if (secours == i) {

@@ -3,7 +3,7 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 /**
- * Rendu d'une case boite sur cible avec sprite tree.
+ * Rendu d'une case boîte sur cible avec la texture arbre.
  */
 public class RenduCaseBoiteCible implements RenduCase {
     @Override

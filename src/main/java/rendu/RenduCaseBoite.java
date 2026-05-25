@@ -3,7 +3,7 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 /**
- * Rendu de la case boite avec sprite pluie.
+ * Rendu de la case boîte avec la texture pluie.
  */
 public class RenduCaseBoite implements RenduCase {
     @Override

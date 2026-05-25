@@ -16,22 +16,22 @@ import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 
 /**
- * Cree une scene dediee a la previsualisation et au choix du personnage.
+ * Crée une scène dédiée à la prévisualisation et au choix du personnage.
  */
 public final class SceneChoixPersonnage {
     private SceneChoixPersonnage() {
     }
 
     /**
-     * Construit la scene de choix de personnage.
+        * Construit la scène de choix de personnage.
      *
-     * @param largeur largeur de la fenetre
-     * @param hauteur hauteur de la fenetre
+        * @param largeur largeur de la fenêtre
+        * @param hauteur hauteur de la fenêtre
      * @param personnages personnages disponibles
      * @param personnageActuel personnage actuellement actif
-     * @param onValider callback appele avec l'id selectionne
-     * @param onRetour callback appele au retour sans validation
-     * @return scene prete a afficher
+        * @param onValider action appelée avec l'identifiant sélectionné
+        * @param onRetour action appelée au retour sans validation
+        * @return scène prête à afficher
      */
     public static Scene creer(
         double largeur,

@@ -4,12 +4,22 @@ import java.util.PriorityQueue;
 import java.util.Stack;
 
 /**
- * Pathfinding A* pour le clic-deplacement.
+ * Algorithme A* pour le déplacement automatique au clic.
  */
 public final class AAsterix {
     private static final int[] D_ROW = {-1, 1, 0, 0};
     private static final int[] D_COL = {0, 0, -1, 1};
 
+    /**
+     * Calcule un chemin entre deux positions sur une grille traversable.
+     *
+     * @param grid grille binaire (1 = libre, 0 = bloqué)
+     * @param rows nombre de lignes
+     * @param cols nombre de colonnes
+     * @param src position de départ
+     * @param dest position d'arrivée
+     * @return liste ordonnée de positions à parcourir, ou null si aucun chemin n'existe
+     */
     public List<Pair> aStarSearch(int[][] grid, int rows, int cols, Pair src, Pair dest) {
         if (!isValid(rows, cols, src) || !isValid(rows, cols, dest)) {
             return null;

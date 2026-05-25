@@ -2,10 +2,15 @@
  * Moteur de logique Sokoban : déplacements, poussée de boîtes et victoire.
  */
 public class LogiqueSokoban {
+    // Limite mémoire volontaire pour l'annulation: assez large pour jouer confortablement,
+    // sans conserver un historique infini de grilles potentiellement récursives.
     private static final int HISTORIQUE_MAX = 300;
-    private static final int RESULTAT_ECHEC = 0;
-    private static final int RESULTAT_CONTINUER = 1;
-    private static final int RESULTAT_FINALISE = 2;
+
+    private enum ResultatResolution {
+        ECHEC,
+        CONTINUER,
+        FINALISE
+    }
 
     private static final class ContexteRecursif {
         private final char mondeParent;
@@ -47,6 +52,152 @@ public class LogiqueSokoban {
         }
     }
 
+    private static final class HistoriqueInstantanes {
+        private final java.util.ArrayList<Instantane> elements = new java.util.ArrayList<>();
+
+        private void vider() {
+            elements.clear();
+        }
+
+        private boolean estVide() {
+            return elements.isEmpty();
+        }
+
+        private void pousser(Instantane instantane) {
+            elements.add(instantane);
+            if (elements.size() > HISTORIQUE_MAX) {
+                elements.remove(0);
+            }
+        }
+
+        private Instantane extraireDernier() {
+            if (elements.isEmpty()) {
+                return null;
+            }
+            return elements.remove(elements.size() - 1);
+        }
+    }
+
+    private final class ResolveurMouvement {
+        private boolean resoudre(Direction direction, Instantane avantCoup) {
+            char[][] grille = grilleCourante();
+            int[] positionJoueur = localiserJoueur(grille);
+            if (positionJoueur == null) {
+                return false;
+            }
+
+            int joueurX = positionJoueur[0];
+            int joueurY = positionJoueur[1];
+
+            int nx = joueurX + direction.getDeltaX();
+            int ny = joueurY + direction.getDeltaY();
+            if (!dansGrille(nx, ny)) {
+                return essayerSortiePuisFinalisation(joueurX, joueurY, direction, avantCoup);
+            }
+
+            char destination = grille[ny][nx];
+            if (destination == '#') {
+                return essayerSortieDepuisMurBordurePuisFinalisation(
+                    grille,
+                    nx,
+                    ny,
+                    joueurX,
+                    joueurY,
+                    direction,
+                    avantCoup
+                );
+            }
+
+            if (estBoiteMondeSurCible(destination)) {
+                return essayerEntreeMondePuisFinalisation(destination, joueurX, joueurY, direction, avantCoup);
+            }
+
+            if (estObjetPoussable(destination)) {
+                ResultatResolution resultatObjet =
+                    gererPousseeOuEntreeMonde(grille, destination, nx, ny, joueurX, joueurY, direction, avantCoup);
+                if (resultatObjet == ResultatResolution.ECHEC) {
+                    return false;
+                }
+                if (resultatObjet == ResultatResolution.FINALISE) {
+                    return true;
+                }
+            } else if (estLibre(destination)) {
+                grille[ny][nx] = (destination == '.') ? '+' : '@';
+            } else {
+                return false;
+            }
+
+            grille[joueurY][joueurX] = (grille[joueurY][joueurX] == '+') ? '.' : ' ';
+            return finaliserDeplacement(direction, avantCoup);
+        }
+
+        private boolean essayerSortiePuisFinalisation(int joueurX, int joueurY, Direction direction, Instantane avantCoup) {
+            if (!essayerSortirVersParent(joueurX, joueurY)) {
+                return false;
+            }
+            return finaliserDeplacement(direction, avantCoup);
+        }
+
+        private boolean essayerSortieDepuisMurBordurePuisFinalisation(
+            char[][] grille,
+            int nx,
+            int ny,
+            int joueurX,
+            int joueurY,
+            Direction direction,
+            Instantane avantCoup
+        ) {
+            if (!peutSortirVersParent() || !estMurDeBordure(grille, nx, ny)) {
+                return false;
+            }
+            if (!essayerSortirVersParent(joueurX, joueurY)) {
+                return false;
+            }
+            return finaliserDeplacement(direction, avantCoup);
+        }
+
+        private boolean essayerEntreeMondePuisFinalisation(
+            char destination,
+            int joueurX,
+            int joueurY,
+            Direction direction,
+            Instantane avantCoup
+        ) {
+            if (!essayerEntrerDansMonde(destination, joueurX, joueurY)) {
+                return false;
+            }
+            return finaliserDeplacement(direction, avantCoup);
+        }
+
+        private ResultatResolution gererPousseeOuEntreeMonde(
+            char[][] grille,
+            char destination,
+            int nx,
+            int ny,
+            int joueurX,
+            int joueurY,
+            Direction direction,
+            Instantane avantCoup
+        ) {
+            int bx = nx + direction.getDeltaX();
+            int by = ny + direction.getDeltaY();
+            if (dansGrille(bx, by) && estLibre(grille[by][bx])) {
+                char caseApresObjet = grille[by][bx];
+                grille[by][bx] = convertirObjetPousse(destination, caseApresObjet);
+                grille[ny][nx] = estCelluleSupportCible(destination) ? '+' : '@';
+                return ResultatResolution.CONTINUER;
+            }
+
+            if (!estMonde(destination)) {
+                return ResultatResolution.ECHEC;
+            }
+
+            return essayerEntreeMondePuisFinalisation(destination, joueurX, joueurY, direction, avantCoup)
+                ? ResultatResolution.FINALISE
+                : ResultatResolution.ECHEC;
+        }
+    }
+
     private java.util.LinkedHashMap<Character, char[][]> mondes;
     private char identifiantRacine;
     private char mondeActuel;
@@ -54,7 +205,8 @@ public class LogiqueSokoban {
     private int coups;
     private boolean victoire;
     private StringBuilder sequenceCoups;
-    private final java.util.ArrayList<Instantane> historique;
+    private final HistoriqueInstantanes historique;
+    private final ResolveurMouvement resolveurMouvement;
 
     /**
      * Construit un moteur à partir d'un plateau de cases.
@@ -62,7 +214,8 @@ public class LogiqueSokoban {
      * @param plateau plateau source
      */
     public LogiqueSokoban(Case[][] plateau) {
-        historique = new java.util.ArrayList<>();
+        historique = new HistoriqueInstantanes();
+        resolveurMouvement = new ResolveurMouvement();
         mondes = new java.util.LinkedHashMap<>();
         pileMonde = new java.util.ArrayList<>();
         sequenceCoups = new StringBuilder();
@@ -73,7 +226,8 @@ public class LogiqueSokoban {
      * Construit un moteur à partir d'un niveau récursif complet.
      */
     public LogiqueSokoban(ChargeurNiveau.NiveauCharge niveau) {
-        historique = new java.util.ArrayList<>();
+        historique = new HistoriqueInstantanes();
+        resolveurMouvement = new ResolveurMouvement();
         mondes = new java.util.LinkedHashMap<>();
         pileMonde = new java.util.ArrayList<>();
         sequenceCoups = new StringBuilder();
@@ -135,126 +289,21 @@ public class LogiqueSokoban {
 
         Instantane avantCoup = creerInstantane();
 
-        char[][] grille = grilleCourante();
-        int[] positionJoueur = localiserJoueur(grille);
-        if (positionJoueur == null) {
-            return false;
-        }
-
-        int joueurX = positionJoueur[0];
-        int joueurY = positionJoueur[1];
-
-        int nx = joueurX + direction.getDeltaX();
-        int ny = joueurY + direction.getDeltaY();
-        if (!dansGrille(nx, ny)) {
-            return essayerSortiePuisFinalisation(joueurX, joueurY, direction, avantCoup);
-        }
-
-        char destination = grille[ny][nx];
-        if (destination == '#') {
-            return essayerSortieDepuisMurBordurePuisFinalisation(grille, nx, ny, joueurX, joueurY, direction, avantCoup);
-        }
-
-        if (estBoiteMondeSurCible(destination)) {
-            return essayerEntreeMondePuisFinalisation(destination, joueurX, joueurY, direction, avantCoup);
-        }
-
-        if (estObjetPoussable(destination)) {
-            int resultatObjet = gererPousseeOuEntreeMonde(grille, destination, nx, ny, joueurX, joueurY, direction, avantCoup);
-            if (resultatObjet == RESULTAT_ECHEC) {
-                return false;
-            }
-            if (resultatObjet == RESULTAT_FINALISE) {
-                return true;
-            }
-        } else if (estLibre(destination)) {
-            grille[ny][nx] = (destination == '.') ? '+' : '@';
-        } else {
-            return false;
-        }
-
-        grille[joueurY][joueurX] = (grille[joueurY][joueurX] == '+') ? '.' : ' ';
-        return finaliserDeplacement(direction, avantCoup);
+        return resolveurMouvement.resoudre(direction, avantCoup);
     }
 
     private void reinitialiserEtatPartie() {
         coups = 0;
         victoire = verifierVictoire();
         sequenceCoups.setLength(0);
-        historique.clear();
-    }
-
-    private boolean essayerSortiePuisFinalisation(int joueurX, int joueurY, Direction direction, Instantane avantCoup) {
-        if (!essayerSortirVersParent(joueurX, joueurY)) {
-            return false;
-        }
-        return finaliserDeplacement(direction, avantCoup);
-    }
-
-    private boolean essayerSortieDepuisMurBordurePuisFinalisation(
-        char[][] grille,
-        int nx,
-        int ny,
-        int joueurX,
-        int joueurY,
-        Direction direction,
-        Instantane avantCoup
-    ) {
-        if (!peutSortirVersParent() || !estMurDeBordure(grille, nx, ny)) {
-            return false;
-        }
-        if (!essayerSortirVersParent(joueurX, joueurY)) {
-            return false;
-        }
-        return finaliserDeplacement(direction, avantCoup);
-    }
-
-    private boolean essayerEntreeMondePuisFinalisation(
-        char destination,
-        int joueurX,
-        int joueurY,
-        Direction direction,
-        Instantane avantCoup
-    ) {
-        if (!essayerEntrerDansMonde(destination, joueurX, joueurY)) {
-            return false;
-        }
-        return finaliserDeplacement(direction, avantCoup);
-    }
-
-    private int gererPousseeOuEntreeMonde(
-        char[][] grille,
-        char destination,
-        int nx,
-        int ny,
-        int joueurX,
-        int joueurY,
-        Direction direction,
-        Instantane avantCoup
-    ) {
-        int bx = nx + direction.getDeltaX();
-        int by = ny + direction.getDeltaY();
-        if (dansGrille(bx, by) && estLibre(grille[by][bx])) {
-            char caseApresObjet = grille[by][bx];
-            grille[by][bx] = convertirObjetPousse(destination, caseApresObjet);
-            grille[ny][nx] = estCelluleSupportCible(destination) ? '+' : '@';
-            return RESULTAT_CONTINUER;
-        }
-
-        if (!estMonde(destination)) {
-            return RESULTAT_ECHEC;
-        }
-
-        return essayerEntreeMondePuisFinalisation(destination, joueurX, joueurY, direction, avantCoup)
-            ? RESULTAT_FINALISE
-            : RESULTAT_ECHEC;
+        historique.vider();
     }
 
     private boolean finaliserDeplacement(Direction direction, Instantane avantCoup) {
         coups++;
         sequenceCoups.append(directionVersSymbole(direction));
         victoire = verifierVictoire();
-        pousserHistorique(avantCoup);
+        historique.pousser(avantCoup);
         return true;
     }
 
@@ -264,11 +313,14 @@ public class LogiqueSokoban {
      * @return true si un état précédent a été restauré, false sinon
      */
     public boolean annulerDernierCoup() {
-        if (historique.isEmpty()) {
+        if (historique.estVide()) {
             return false;
         }
 
-        Instantane precedent = historique.remove(historique.size() - 1);
+        Instantane precedent = historique.extraireDernier();
+        if (precedent == null) {
+            return false;
+        }
         mondes = copierMondes(precedent.mondes);
         identifiantRacine = precedent.identifiantRacine;
         mondeActuel = precedent.mondeActuel;
@@ -307,7 +359,7 @@ public class LogiqueSokoban {
     }
 
     /**
-     * Retourne les coups au format solution Sokobano (compression simple RLE).
+        * Retourne les coups au format solution Sokobano (compression RLE simple).
      */
     public String exporterCoupsSokobano() {
         if (sequenceCoups == null || sequenceCoups.length() == 0) {
@@ -335,10 +387,10 @@ public class LogiqueSokoban {
     }
 
     /**
-     * Rejoue une sequence de coups encodes au format Sokobano (RLE simple, ex: 3r2u).
+        * Rejoue une séquence de coups encodés au format Sokobano (RLE simple, ex: 3r2u).
      *
-     * @param solutionSokobano sequence des mouvements
-     * @return true si toute la sequence a ete rejouee avec succes
+        * @param solutionSokobano séquence des mouvements
+        * @return true si toute la séquence a été rejouée avec succès
      */
     public boolean rejouerCoupsSokobano(String solutionSokobano) {
         if (solutionSokobano == null || solutionSokobano.isBlank()) {
@@ -393,13 +445,6 @@ public class LogiqueSokoban {
 
     public boolean peutSortirVersParent() {
         return !pileMonde.isEmpty();
-    }
-
-    private void pousserHistorique(Instantane instantane) {
-        historique.add(instantane);
-        if (historique.size() > HISTORIQUE_MAX) {
-            historique.remove(0);
-        }
     }
 
     private Instantane creerInstantane() {
@@ -609,8 +654,8 @@ public class LogiqueSokoban {
     }
 
     /**
-     * Cherche une case de spawn pertinente: avec poussee atteignable si le monde contient des objets,
-     * sinon avec au moins une possibilite de circulation/sortie.
+        * Cherche une case d'apparition pertinente: avec poussée atteignable si le monde contient des objets,
+        * sinon avec au moins une possibilité de circulation ou de sortie.
      */
     private int[] trouverSpawnEntree(char[][] grille) {
         if (grille == null) {
@@ -639,7 +684,7 @@ public class LogiqueSokoban {
     }
 
     /**
-     * Evalue la qualite d'un spawn en fonction des actions atteignables depuis sa zone accessible.
+        * Évalue la qualité d'une case d'apparition selon les actions atteignables depuis sa zone accessible.
      */
     private int evaluerQualiteSpawn(char[][] grille, int x, int y, boolean contientObjetPoussable) {
         int[][] directions = new int[][] {

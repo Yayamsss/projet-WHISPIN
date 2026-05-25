@@ -3,7 +3,7 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 /**
- * Rendu de la case mur avec sprite wall.
+ * Rendu de la case mur avec la texture de mur.
  */
 public class RenduCaseMur implements RenduCase {
     @Override

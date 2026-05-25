@@ -45,14 +45,6 @@ public final class ConvertisseurCases {
     }
 
     /**
-     * @deprecated Utiliser depuisSymboleTolerant pour eviter les accents dans les API.
-     */
-    @Deprecated
-    public static Case depuisSymboleTolérant(char symbole, int x, int y) {
-        return depuisSymboleTolerant(symbole, x, y);
-    }
-
-    /**
      * Convertit une case en symbole Sokoban.
      */
     public static char versSymbole(Case caseJeu) {

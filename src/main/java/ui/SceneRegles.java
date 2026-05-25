@@ -11,19 +11,19 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 /**
- * Cree une scene dediee aux regles du jeu.
+ * Crée une scène dédiée aux règles du jeu.
  */
 public final class SceneRegles {
     private SceneRegles() {
     }
 
     /**
-     * Construit la scene des regles.
+        * Construit la scène des règles.
      *
-     * @param largeur largeur de la fenetre
-     * @param hauteur hauteur de la fenetre
-     * @param onRetour callback de retour
-     * @return scene prete a afficher
+        * @param largeur largeur de la fenêtre
+        * @param hauteur hauteur de la fenêtre
+        * @param onRetour action de retour
+        * @return scène prête à afficher
      */
     public static Scene creer(double largeur, double hauteur, Runnable onRetour) {
         BorderPane panneau = new BorderPane();

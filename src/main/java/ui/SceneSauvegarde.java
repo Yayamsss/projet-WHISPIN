@@ -18,23 +18,23 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 /**
- * Cree une scene dediee aux actions de sauvegarde/chargement.
+ * Crée une scène dédiée aux actions de sauvegarde et de chargement.
  */
 public final class SceneSauvegarde {
     private SceneSauvegarde() {
     }
 
     /**
-     * Construit la scene sauvegarde.
+        * Construit la scène de sauvegarde.
      *
-     * @param largeur largeur de la fenetre
-     * @param hauteur hauteur de la fenetre
+        * @param largeur largeur de la fenêtre
+        * @param hauteur hauteur de la fenêtre
      * @param partieActive indique si une partie est en cours
-     * @param onSauvegarder callback action sauvegarder, retourne un message de statut
-     * @param listerSauvegardes callback pour recuperer la liste des sauvegardes
-     * @param onCharger callback action charger, retourne un message de statut
-     * @param onRetour callback retour
-     * @return scene prete a afficher
+        * @param onSauvegarder action de sauvegarde, retourne un message de statut
+        * @param listerSauvegardes action de listing des sauvegardes disponibles
+        * @param onCharger action de chargement, retourne un message de statut
+        * @param onRetour action de retour vers la scène précédente
+        * @return scène prête à afficher
      */
     public static Scene creer(
         double largeur,
