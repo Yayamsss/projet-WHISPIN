@@ -53,10 +53,7 @@ public final class FondEcran {
      */
     private static Image chargerImageFond() {
         String[] candidats = new String[] {
-            "fond_principal_ecran.png",
-            "fond_principale_ecran.png",
-            "fond_principale_ecran-frame0.png",
-            "bin/fond_principale_ecran-frame0.png"
+            "assets/fond_ecran.png"
         };
 
         for (String candidat : candidats) {

@@ -12,7 +12,10 @@ endif
 JAVAFX_MODULES ?= javafx.controls,javafx.fxml
 JAVA_RUN_OPTS ?= --enable-native-access=javafx.graphics
 
-SRC := $(shell find . -name "*.java" -not -path "./Quantum-main/*" -not -path "./bin/*")
+SRC := $(shell find . -name "*.java" \
+	-not -path "./Quantum-main/*" \
+	-not -path "./WHISPIN-SOKOBAN/*" \
+	-not -path "./bin/*")
 BIN := bin
 MAIN := InterfacePrincipale
 

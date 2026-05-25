@@ -37,9 +37,7 @@ public final class Animation {
     );
 
     private static final Image RAIN = chargerDepuisCandidats(
-        "assets/tiles/pngegg.png",
-        "assets/tiles/rain.png",
-        "assets/tiles/rain.jpg"
+        "assets/tiles/pngegg.png"
     );
 
     private static final Image PORTAL = chargerDepuisCandidats(
