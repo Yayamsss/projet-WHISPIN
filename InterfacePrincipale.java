@@ -110,7 +110,7 @@ public class InterfacePrincipale extends Application {
         btnNiveau.setOnAction(event -> chargerNiveauSelectionne());
         btnRegles.setOnAction(event -> DialoguesMenu.afficherReglesDuJeu());
         btnSauvegarde.setOnAction(event -> gererSauvegarde());
-        btnParamettre.setOnAction(event -> DialoguesMenu.afficherParametres());
+        btnParamettre.setOnAction(event -> gererParametres());
         btnQuitter.setOnAction(event -> {
             sauvegarderEtatCourantAutomatiqueSiPossible();
             Platform.exit();
@@ -470,6 +470,51 @@ public class InterfacePrincipale extends Application {
             default:
                 break;
         }
+    }
+
+    private void gererParametres() {
+        List<String> personnages = Animation.getPersonnagesDisponibles();
+        if (personnages.isEmpty()) {
+            DialoguesMenu.afficherInformation("Paramettre", "Aucun personnage trouve dans assets/player.");
+            return;
+        }
+
+        ouvrirSceneChoixPersonnage(personnages);
+    }
+
+    private void ouvrirSceneChoixPersonnage(List<String> personnages) {
+        if (stagePrincipal == null || scenePrincipale == null) {
+            return;
+        }
+
+        Runnable retourScenePrincipale = () -> {
+            stagePrincipal.setScene(scenePrincipale);
+            activerPleinEcranEtFocus();
+            if (!modeJeuActif) {
+                focusBoutonMenuPrincipal(indexBoutonMenuPrincipal);
+            } else if (racinePrincipale != null) {
+                racinePrincipale.requestFocus();
+            }
+        };
+
+        Scene sceneChoix = SceneChoixPersonnage.creer(
+            scenePrincipale.getWidth(),
+            scenePrincipale.getHeight(),
+            personnages,
+            Animation.getPersonnageActuel(),
+            choisi -> {
+                if (!Animation.selectionnerPersonnage(choisi)) {
+                    DialoguesMenu.afficherInformation("Paramettre", "Impossible de charger le personnage choisi.");
+                    return;
+                }
+                dessinerPlateauActuel();
+                retourScenePrincipale.run();
+            },
+            retourScenePrincipale
+        );
+
+        stagePrincipal.setScene(sceneChoix);
+        activerPleinEcranEtFocus();
     }
 
     private void sauvegarderEtatCourant() {
