@@ -42,6 +42,10 @@ public final class Animation {
         "assets/tiles/rain.jpg"
     );
 
+    private static final Image PORTAL = chargerDepuisCandidats(
+        "assets/tiles/portal.jpg"
+    );
+
     private Animation() {
     }
 
@@ -67,6 +71,10 @@ public final class Animation {
 
     public static Image getRain() {
         return RAIN;
+    }
+
+    public static Image getPortal() {
+        return PORTAL;
     }
 
     public static synchronized void reinitialiserAnimationPersonnage() {

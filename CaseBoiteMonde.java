@@ -1,19 +1,19 @@
 import javafx.scene.paint.Color;
 
 /**
- * Représente une case de monde récursif.
+ * Représente une boîte spéciale qui pointe vers un sous-monde.
  */
-public class CaseMonde extends Case {
+public class CaseBoiteMonde extends CaseBoite {
     private final char identifiantMonde;
 
     /**
-     * Construit une case monde.
+     * Construit une case boîte-monde.
      *
      * @param x abscisse de la case
      * @param y ordonnée de la case
      * @param identifiantMonde lettre d'identification du monde
      */
-    public CaseMonde(int x, int y, char identifiantMonde) {
+    public CaseBoiteMonde(int x, int y, char identifiantMonde) {
         super(x, y);
         if (!Character.isLetter(identifiantMonde)) {
             throw new IllegalArgumentException("L'identifiant de monde doit être une lettre.");
@@ -23,8 +23,6 @@ public class CaseMonde extends Case {
 
     /**
      * Retourne l'identifiant alphabétique du monde ciblé.
-     *
-     * @return identifiant du monde
      */
     public char getIdentifiantMonde() {
         return identifiantMonde;
@@ -36,13 +34,8 @@ public class CaseMonde extends Case {
     }
 
     @Override
-    public boolean estTraversable() {
-        return false;
-    }
-
-    @Override
     public char getSymbole() {
-        return identifiantMonde;
+        return Character.toLowerCase(identifiantMonde);
     }
 
     @Override

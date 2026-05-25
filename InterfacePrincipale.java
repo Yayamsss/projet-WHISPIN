@@ -293,8 +293,8 @@ public class InterfacePrincipale extends Application {
             return false;
         }
 
-        Case[][] plateauCharge = ChargeurNiveau.chargerDepuisFichier("niveau/" + niveau);
-        if (plateauCharge == null) {
+        ChargeurNiveau.NiveauCharge niveauCharge = ChargeurNiveau.chargerNiveauRecursifDepuisFichier("niveau/" + niveau);
+        if (niveauCharge == null || niveauCharge.getPlateauRacine() == null) {
             DialoguesMenu.afficherInformation(
                 "Erreur de chargement",
                 "Impossible de charger le niveau : " + niveau
@@ -302,8 +302,8 @@ public class InterfacePrincipale extends Application {
             return false;
         }
 
-        plateauActuel = plateauCharge;
-        moteurJeu = new LogiqueSokoban(plateauActuel);
+        moteurJeu = new LogiqueSokoban(niveauCharge);
+        plateauActuel = moteurJeu.exporterPlateau();
         nomNiveauActuel = niveau;
         Animation.reinitialiserAnimationPersonnage();
         arreterAnimationVictoire();

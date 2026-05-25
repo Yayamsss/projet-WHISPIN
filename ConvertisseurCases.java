@@ -9,6 +9,13 @@ public final class ConvertisseurCases {
      * Convertit un symbole Sokoban en case.
      */
     public static Case depuisSymbole(char symbole, int x, int y) {
+        if (Character.isLetter(symbole)) {
+            if (Character.isUpperCase(symbole)) {
+                return new CaseBoiteMondeSurCible(x, y, symbole);
+            }
+            return new CaseBoiteMonde(x, y, symbole);
+        }
+
         switch (symbole) {
             case '#':
                 return new CaseMur(x, y);
