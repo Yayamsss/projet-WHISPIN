@@ -117,37 +117,6 @@ public final class DialoguesMenu {
     }
 
     /**
-     * Ouvre un dialogue de choix de personnage.
-     *
-     * @param personnages liste des identifiants disponibles
-     * @param personnageActuel identifiant actuellement actif
-     * @return personnage choisi, ou null si annulé
-     */
-    public static String ouvrirDialogueChoixPersonnage(List<String> personnages, String personnageActuel) {
-        if (personnages == null || personnages.isEmpty()) {
-            return null;
-        }
-
-        String valeurParDefaut = personnages.contains(personnageActuel)
-            ? personnageActuel
-            : personnages.get(0);
-
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(valeurParDefaut, personnages);
-        dialog.setTitle("Paramettre");
-        dialog.setHeaderText("Choix du personnage");
-        dialog.setContentText("Personnage :");
-        styliserDialogue(dialog.getDialogPane());
-        return dialog.showAndWait().orElse(null);
-    }
-
-    /**
-     * Affiche la boîte de dialogue des paramètres (placeholder).
-     */
-    public static void afficherParametres() {
-        afficherInfo("Paramettre", "Utilise maintenant le choix du personnage.");
-    }
-
-    /**
      * Affiche un message d'information simple.
      *
      * @param titre titre de la boîte
