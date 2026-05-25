@@ -335,20 +335,44 @@ public class LogiqueSokoban {
      * Retourne le plateau courant sous forme d'objets Case.
      */
     public Case[][] exporterPlateau() {
-        char[][] grille = grilleCourante();
-        if (grille == null || grille.length == 0) {
-            return null;
+        return exporterGrille(grilleCourante());
+    }
+
+    /**
+     * Retourne les plateaux des mondes supérieurs, du parent immédiat vers la racine.
+     */
+    public java.util.List<Case[][]> exporterPlateauxSuperieurs() {
+        java.util.ArrayList<Case[][]> plateaux = new java.util.ArrayList<>();
+        if (pileMonde == null || pileMonde.isEmpty()) {
+            return plateaux;
         }
 
-        int hauteur = grille.length;
-        int largeur = grille[0].length;
-        Case[][] plateau = new Case[hauteur][largeur];
-        for (int y = 0; y < hauteur; y++) {
-            for (int x = 0; x < largeur; x++) {
-                plateau[y][x] = convertirSymboleVersCase(grille[y][x], x, y);
+        for (int i = pileMonde.size() - 1; i >= 0; i--) {
+            ContexteRecursif contexte = pileMonde.get(i);
+            char[][] grilleParent = mondes.get(contexte.mondeParent);
+            Case[][] plateauParent = exporterGrille(grilleParent);
+            if (plateauParent != null) {
+                plateaux.add(plateauParent);
             }
         }
-        return plateau;
+
+        return plateaux;
+    }
+
+    /**
+     * Retourne les identifiants des mondes supérieurs, du parent immédiat vers la racine.
+     */
+    public java.util.List<Character> exporterIdentifiantsMondesSuperieurs() {
+        java.util.ArrayList<Character> identifiants = new java.util.ArrayList<>();
+        if (pileMonde == null || pileMonde.isEmpty()) {
+            return identifiants;
+        }
+
+        for (int i = pileMonde.size() - 1; i >= 0; i--) {
+            identifiants.add(pileMonde.get(i).mondeParent);
+        }
+
+        return identifiants;
     }
 
     /**
@@ -853,5 +877,21 @@ public class LogiqueSokoban {
 
     private static Case convertirSymboleVersCase(char c, int x, int y) {
         return ConvertisseurCases.depuisSymbole(c, x, y);
+    }
+
+    private static Case[][] exporterGrille(char[][] grille) {
+        if (grille == null || grille.length == 0) {
+            return null;
+        }
+
+        int hauteur = grille.length;
+        int largeur = grille[0].length;
+        Case[][] plateau = new Case[hauteur][largeur];
+        for (int y = 0; y < hauteur; y++) {
+            for (int x = 0; x < largeur; x++) {
+                plateau[y][x] = convertirSymboleVersCase(grille[y][x], x, y);
+            }
+        }
+        return plateau;
     }
 }

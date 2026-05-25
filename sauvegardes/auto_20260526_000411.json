@@ -1,0 +1,8 @@
+{
+  "version" : 1,
+  "type" : "plateau",
+  "niveau" : "niveau_04.txt",
+  "horodatage" : 1779746651525,
+  "plateau" : [ "#########", "#  **B  #", "#  @    #", "#       #", "#       #", "#       #", "#########" ],
+  "solution_sokobano" : "3ruldl2u2drudu3dludlu"
+}

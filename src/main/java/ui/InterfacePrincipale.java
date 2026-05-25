@@ -287,14 +287,112 @@ public class InterfacePrincipale extends Application {
 
         int lignes = plateauActuel.length;
         int colonnes = plateauActuel[0].length;
-        double tailleCase = Math.min(largeur / colonnes, hauteur / lignes);
+        boolean afficherMondesSuperieurs = moteurJeu != null && moteurJeu.getProfondeurRecursion() > 0;
+
+        // En mode récursif, on réserve de la largeur sur les côtés pour afficher
+        // les mini-scènes parentes à droite/gauche.
+        double largeurDisponiblePlateau = afficherMondesSuperieurs ? largeur * 0.56 : largeur;
+        double tailleCase = Math.min(largeurDisponiblePlateau / colonnes, hauteur / lignes);
+        double largeurPlateau = colonnes * tailleCase;
+        double hauteurPlateau = lignes * tailleCase;
         double origineX = (largeur - colonnes * tailleCase) / 2.0;
         double origineY = (hauteur - lignes * tailleCase) / 2.0;
 
+        dessinerMondesSuperieursAutour(gc, origineX, origineY, largeurPlateau, hauteurPlateau, tailleCase);
         RenduPlateau.dessinerPlateau(gc, plateauActuel, origineX, origineY, tailleCase);
 
         if (victoireAnimee) {
             feuArtifice.dessiner(gc, tempsAnimationVictoireNs);
+        }
+    }
+
+    private void dessinerMondesSuperieursAutour(
+        GraphicsContext gc,
+        double origineX,
+        double origineY,
+        double largeurPlateau,
+        double hauteurPlateau,
+        double tailleCase
+    ) {
+        if (moteurJeu == null || moteurJeu.getProfondeurRecursion() <= 0) {
+            return;
+        }
+
+        java.util.List<Case[][]> mondesSuperieurs = moteurJeu.exporterPlateauxSuperieurs();
+        java.util.List<Character> identifiantsMondesSuperieurs = moteurJeu.exporterIdentifiantsMondesSuperieurs();
+        if (mondesSuperieurs == null || mondesSuperieurs.isEmpty()) {
+            return;
+        }
+
+        // Chaque monde supérieur est affiché comme une mini-scène (échelle 1/4)
+        // autour du plateau principal pour rester lisible.
+        double largeurMini = largeurPlateau * 0.30;
+        double hauteurMini = hauteurPlateau * 0.30;
+        double marge = Math.max(8.0, tailleCase * 0.35);
+        double paddingInterieur = Math.max(3.0, tailleCase * 0.08);
+        double hauteurBandeauTitre = Math.max(14.0, tailleCase * 0.40);
+
+        double centreY = origineY + (hauteurPlateau - hauteurMini) / 2.0;
+        double xDroite = origineX + largeurPlateau + marge;
+        double xGauche = origineX - largeurMini - marge;
+        double pasVertical = hauteurMini + marge;
+
+        int limite = mondesSuperieurs.size();
+        for (int i = 0; i < limite; i++) {
+            Case[][] monde = mondesSuperieurs.get(i);
+            if (monde == null || monde.length == 0 || monde[0] == null || monde[0].length == 0) {
+                continue;
+            }
+
+            // Ordre d'affichage: droite (parent immédiat), puis gauche, puis alternance.
+            boolean placerADroite = (i % 2 == 0);
+            int rangColonne = i / 2;
+            double decalageY;
+            if (rangColonne == 0) {
+                decalageY = 0.0;
+            } else {
+                int couche = (rangColonne + 1) / 2;
+                boolean versHaut = (rangColonne % 2 == 1);
+                decalageY = (versHaut ? -1.0 : 1.0) * couche * pasVertical;
+            }
+
+            double zoneX = placerADroite ? xDroite : xGauche;
+            double zoneY = centreY + decalageY;
+            double zoneLargeur = largeurMini;
+            double zoneHauteur = hauteurMini;
+
+            gc.save();
+            gc.setGlobalAlpha(0.92);
+            gc.setFill(javafx.scene.paint.Color.web("#0b1220", 0.88));
+            gc.fillRoundRect(zoneX, zoneY, zoneLargeur, zoneHauteur, 10, 10);
+
+            gc.setStroke(javafx.scene.paint.Color.web("#93c5fd", 0.9));
+            gc.setLineWidth(Math.max(1.0, tailleCase * 0.06));
+            gc.strokeRoundRect(zoneX, zoneY, zoneLargeur, zoneHauteur, 10, 10);
+
+            gc.setFill(javafx.scene.paint.Color.web("#1e3a5f", 0.95));
+            gc.fillRoundRect(zoneX, zoneY, zoneLargeur, hauteurBandeauTitre, 10, 10);
+            gc.fillRect(zoneX, zoneY + hauteurBandeauTitre * 0.5, zoneLargeur, hauteurBandeauTitre * 0.5);
+
+            char identifiant = (identifiantsMondesSuperieurs != null && i < identifiantsMondesSuperieurs.size())
+                ? identifiantsMondesSuperieurs.get(i)
+                : '?';
+            gc.setFill(javafx.scene.paint.Color.web("#dbeafe"));
+            gc.setTextAlign(javafx.scene.text.TextAlignment.CENTER);
+            gc.setTextBaseline(javafx.geometry.VPos.CENTER);
+            gc.setFont(javafx.scene.text.Font.font(Math.max(10.0, tailleCase * 0.22)));
+            gc.fillText("Monde " + identifiant, zoneX + zoneLargeur / 2.0, zoneY + hauteurBandeauTitre / 2.0);
+
+            int lignesParent = monde.length;
+            int colonnesParent = monde[0].length;
+            double zoneInterieureLargeur = Math.max(1.0, zoneLargeur - paddingInterieur * 2.0);
+            double zoneInterieureHauteur = Math.max(1.0, zoneHauteur - paddingInterieur * 2.0 - hauteurBandeauTitre);
+            double tailleMiniCase = Math.min(zoneInterieureLargeur / colonnesParent, zoneInterieureHauteur / lignesParent);
+            double miniOrigineX = zoneX + (zoneLargeur - colonnesParent * tailleMiniCase) / 2.0;
+            double miniOrigineY = zoneY + hauteurBandeauTitre + (zoneHauteur - hauteurBandeauTitre - lignesParent * tailleMiniCase) / 2.0;
+
+            RenduPlateau.dessinerPlateau(gc, monde, miniOrigineX, miniOrigineY, tailleMiniCase);
+            gc.restore();
         }
     }
 
