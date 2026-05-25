@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -522,7 +523,7 @@ public class InterfacePrincipale extends Application {
             Path chemin = ServicePersistance.creerCheminSauvegardeAuto();
             ServicePersistance.sauvegarderSessionJson(chemin, nomNiveauActuel, plateauActuel);
             DialoguesMenu.afficherInformation("Sauvegarde", "Sauvegarde creee : " + chemin.getFileName());
-        } catch (Exception e) {
+        } catch (IOException e) {
             DialoguesMenu.afficherInformation("Erreur", "Echec de la sauvegarde.");
         }
     }
@@ -541,7 +542,7 @@ public class InterfacePrincipale extends Application {
             Path chemin = ServicePersistance.creerCheminSauvegardePersonnalisee(nomSouhaite);
             ServicePersistance.sauvegarderSessionJson(chemin, nomNiveauActuel, plateauActuel);
             DialoguesMenu.afficherInformation("Sauvegarde", "Sauvegarde creee : " + chemin.getFileName());
-        } catch (Exception e) {
+        } catch (IOException e) {
             DialoguesMenu.afficherInformation("Erreur", "Echec de la sauvegarde personnalisee.");
         }
     }
@@ -554,7 +555,7 @@ public class InterfacePrincipale extends Application {
         try {
             Path chemin = ServicePersistance.creerCheminSauvegardeAuto();
             ServicePersistance.sauvegarderSessionJson(chemin, nomNiveauActuel, plateauActuel);
-        } catch (Exception e) {
+        } catch (IOException e) {
             // Les sauvegardes auto ne doivent pas interrompre le flux de jeu.
         }
     }
@@ -590,7 +591,7 @@ public class InterfacePrincipale extends Application {
             dessinerPlateauActuel();
             activerPleinEcranEtFocus();
             DialoguesMenu.afficherInformation("Sauvegarde", "Sauvegarde chargee : " + chemin.getFileName());
-        } catch (Exception e) {
+        } catch (IOException | IllegalArgumentException e) {
             DialoguesMenu.afficherInformation("Erreur", "Echec du chargement.");
         }
     }

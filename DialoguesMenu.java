@@ -1,5 +1,6 @@
 import java.util.List;
 import java.util.ArrayList;
+import java.io.IOException;
 import java.nio.file.Path;
 
 import javafx.scene.control.Alert;
@@ -44,7 +45,7 @@ public final class DialoguesMenu {
                 lignes.add(info.getNomFichier() + "  |  " + info.getDateModificationFormatee() + "  |  " + info.getTailleOctets() + " octets");
             }
             afficherListeInfo("Sauvegardes", "Fichiers detectes", lignes);
-        } catch (Exception e) {
+        } catch (IOException e) {
             afficherInfo("Erreur", "Impossible de lire les sauvegardes.");
         }
     }
@@ -96,7 +97,7 @@ public final class DialoguesMenu {
                 }
             }
             return null;
-        } catch (Exception e) {
+        } catch (IOException e) {
             afficherInfo("Erreur", "Impossible de lire les sauvegardes.");
             return null;
         }
