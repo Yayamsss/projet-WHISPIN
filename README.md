@@ -31,15 +31,14 @@ Le jeu combine:
 
 - Linux (cible principale du rendu).
 - JDK (Java 17+ recommande).
+- JavaFX installe localement (OpenJFX).
 - JAR Jackson dans `lib/`:
 	- `jackson-core`
 	- `jackson-databind`
 	- `jackson-annotations`
-- JAR JavaFX dans `lib/` (deja inclus dans ce depot).
 
-Le `makefile` ajoute automatiquement `lib/*` au classpath et priorise JavaFX depuis `lib/`.
-Si les jars JavaFX ne sont pas presents localement, il utilise un JavaFX systeme
-(`JAVAFX_LIB`) en fallback.
+Le `makefile` ajoute automatiquement `lib/*` au classpath pour Jackson.
+Pour JavaFX, il utilise une installation systeme detectee (ou les variables `JAVAFX_LIB` / `JAVAFX_RUN_LIB`).
 
 ## Arborescence utile
 
@@ -122,12 +121,10 @@ Supprime `bin/` et les jars generes.
 
 ## Notes techniques
 
-- Le projet inclut un `makefile` et un build Maven de reference dans `Quantum-main/`.
-- Le dossier `Quantum-main/` sert de reference historique/technique et n'est pas requis pour lancer la version principale a la racine.
 - Les sauvegardes automatiques sont utilisees pour limiter les pertes de progression pendant la partie.
 - Le `makefile` detecte JavaFX automatiquement:
-	- priorite aux jars JavaFX fournis dans `lib/`,
-	- fallback vers une installation systeme si necessaire.
+	- detection d'un chemin systeme connu,
+	- surcharge possible via `JAVAFX_LIB` (build/test) et `JAVAFX_RUN_LIB` (run).
 
 ## Etat des tests
 
@@ -141,5 +138,11 @@ Si JavaFX n'est pas detecte automatiquement, definir explicitement:
 
 ```bash
 make JAVAFX_LIB=/chemin/vers/javafx/lib build
+```
+
+Et pour forcer un chemin different au lancement:
+
+```bash
+make JAVAFX_RUN_LIB=/chemin/vers/javafx/lib run
 ```
 

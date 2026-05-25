@@ -233,7 +233,7 @@ public class InterfacePrincipale extends Application {
 
         if (event.isControlDown() && event.getCode() == KeyCode.S) {
             if (modeJeuActif) {
-                sauvegarderEtatCourantDepuisScene();
+                sauvegarderEtatCourantPersonnalise();
             }
             event.consume();
             return;
