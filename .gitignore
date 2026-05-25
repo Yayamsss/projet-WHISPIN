@@ -1,7 +1,25 @@
 ```
-# Compiled Java classes
+# Build artifacts
+target/
+lib/
+
+# Java compiled files
 *.class
 
-# Build artifacts
-bin/
+# Maven
+target/
+.mvn/
+mvn-status/
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
 ```
