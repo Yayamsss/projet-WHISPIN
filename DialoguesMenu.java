@@ -6,6 +6,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextInputDialog;
 
 /**
  * Regroupe les boîtes de dialogue et messages utilisés par le menu principal.
@@ -99,6 +100,20 @@ public final class DialoguesMenu {
             afficherInfo("Erreur", "Impossible de lire les sauvegardes.");
             return null;
         }
+    }
+
+    /**
+     * Ouvre un dialogue pour saisir un nom de sauvegarde personnalisé.
+     *
+     * @return nom saisi, ou null si annulé
+     */
+    public static String ouvrirDialogueNomSauvegardePersonnalisee() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Sauvegarde personnalisee");
+        dialog.setHeaderText("Nom du fichier de sauvegarde");
+        dialog.setContentText("Nom :");
+        styliserDialogue(dialog.getDialogPane());
+        return dialog.showAndWait().orElse(null);
     }
 
     /**

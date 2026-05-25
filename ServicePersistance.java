@@ -101,6 +101,27 @@ public final class ServicePersistance {
     }
 
     /**
+     * Crée un chemin de sauvegarde personnalisé (nom nettoyé + extension .json).
+     */
+    public static Path creerCheminSauvegardePersonnalisee(String nomSouhaite) {
+        String nomBase = nomSouhaite == null ? "" : nomSouhaite.trim();
+        if (nomBase.isEmpty()) {
+            nomBase = "manual_" + LocalDateTime.now().format(FORMAT_HORODATE);
+        }
+
+        nomBase = nomBase.replaceAll("[^A-Za-z0-9._-]", "_");
+        if (nomBase.isEmpty()) {
+            nomBase = "manual_" + LocalDateTime.now().format(FORMAT_HORODATE);
+        }
+
+        if (!nomBase.toLowerCase().endsWith(".json")) {
+            nomBase = nomBase + ".json";
+        }
+
+        return DOSSIER_SAUVEGARDES.resolve(nomBase);
+    }
+
+    /**
      * Liste les sauvegardes JSON triées de la plus récente à la plus ancienne.
      */
     public static ArrayList<SauvegardeInfo> listerSauvegardesInfos() throws IOException {

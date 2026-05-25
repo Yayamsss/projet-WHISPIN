@@ -110,7 +110,10 @@ public class InterfacePrincipale extends Application {
         btnRegles.setOnAction(event -> DialoguesMenu.afficherReglesDuJeu());
         btnSauvegarde.setOnAction(event -> gererSauvegarde());
         btnParamettre.setOnAction(event -> DialoguesMenu.afficherParametres());
-        btnQuitter.setOnAction(event -> Platform.exit());
+        btnQuitter.setOnAction(event -> {
+            sauvegarderEtatCourantAutomatiqueSiPossible();
+            Platform.exit();
+        });
 
         menuPrincipal.getChildren().addAll(
             titre,
@@ -156,6 +159,14 @@ public class InterfacePrincipale extends Application {
                 return;
             }
 
+            if (event.isControlDown() && event.getCode() == KeyCode.S) {
+                if (modeJeuActif) {
+                    sauvegarderEtatCourantPersonnalise();
+                }
+                event.consume();
+                return;
+            }
+
             if (event.isControlDown() && event.getCode() == KeyCode.Z) {
                 if (moteurJeu != null && moteurJeu.annulerDernierCoup()) {
                     plateauActuel = moteurJeu.exporterPlateau();
@@ -184,6 +195,7 @@ public class InterfacePrincipale extends Application {
                 plateauActuel = moteurJeu.exporterPlateau();
                 dessinerPlateauActuel();
                 if (moteurJeu.estVictoire()) {
+                    sauvegarderEtatCourantAutomatiqueSiPossible();
                     lancerAnimationVictoire(this::afficherSceneVictoire);
                 }
             } else {
@@ -293,6 +305,10 @@ public class InterfacePrincipale extends Application {
             return false;
         }
 
+        if (modeJeuActif) {
+            sauvegarderEtatCourantAutomatiqueSiPossible();
+        }
+
         ChargeurNiveau.NiveauCharge niveauCharge = ChargeurNiveau.chargerNiveauRecursifDepuisFichier("niveau/" + niveau);
         if (niveauCharge == null || niveauCharge.getPlateauRacine() == null) {
             DialoguesMenu.afficherInformation(
@@ -318,6 +334,7 @@ public class InterfacePrincipale extends Application {
     }
 
     private void quitterPartieEnCours() {
+        sauvegarderEtatCourantAutomatiqueSiPossible();
         arreterAnimationVictoire();
         transitionVictoireEnCours = false;
         if (stagePrincipal != null && scenePrincipale != null && stagePrincipal.getScene() != scenePrincipale) {
@@ -432,6 +449,38 @@ public class InterfacePrincipale extends Application {
             DialoguesMenu.afficherInformation("Sauvegarde", "Sauvegarde creee : " + chemin.getFileName());
         } catch (Exception e) {
             DialoguesMenu.afficherInformation("Erreur", "Echec de la sauvegarde.");
+        }
+    }
+
+    private void sauvegarderEtatCourantPersonnalise() {
+        if (!modeJeuActif || plateauActuel == null) {
+            return;
+        }
+
+        String nomSouhaite = DialoguesMenu.ouvrirDialogueNomSauvegardePersonnalisee();
+        if (nomSouhaite == null) {
+            return;
+        }
+
+        try {
+            Path chemin = ServicePersistance.creerCheminSauvegardePersonnalisee(nomSouhaite);
+            ServicePersistance.sauvegarderSessionJson(chemin, nomNiveauActuel, plateauActuel);
+            DialoguesMenu.afficherInformation("Sauvegarde", "Sauvegarde creee : " + chemin.getFileName());
+        } catch (Exception e) {
+            DialoguesMenu.afficherInformation("Erreur", "Echec de la sauvegarde personnalisee.");
+        }
+    }
+
+    private void sauvegarderEtatCourantAutomatiqueSiPossible() {
+        if (!modeJeuActif || plateauActuel == null) {
+            return;
+        }
+
+        try {
+            Path chemin = ServicePersistance.creerCheminSauvegardeAuto();
+            ServicePersistance.sauvegarderSessionJson(chemin, nomNiveauActuel, plateauActuel);
+        } catch (Exception e) {
+            // Les sauvegardes auto ne doivent pas interrompre le flux de jeu.
         }
     }
 
