@@ -12,8 +12,8 @@ import javafx.util.Duration;
 /**
  * Gère le chargement et l'animation du fond du menu principal.
  */
-public final class VisuelsFond {
-    private VisuelsFond() {
+public final class FondEcran {
+    private FondEcran() {
     }
 
     /**

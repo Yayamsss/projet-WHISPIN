@@ -10,7 +10,7 @@ import javafx.scene.text.Text;
 /**
  * Centralise la construction et le style visuel du menu principal.
  */
-public final class VisuelsMenu {
+public final class Menu {
     private static final String STYLE_PANNEAU_MENU =
         "-fx-background-color: rgba(20, 18, 24, 0.70);"
         + "-fx-background-radius: 18;"
@@ -36,7 +36,7 @@ public final class VisuelsMenu {
         + "-fx-border-radius: 14;"
         + "-fx-effect: dropshadow(gaussian, rgba(255,220,120,0.65), 20, 0.35, 0, 0);";
 
-    private VisuelsMenu() {
+    private Menu() {
     }
 
     /**

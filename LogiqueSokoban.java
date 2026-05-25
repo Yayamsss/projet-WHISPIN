@@ -1,7 +1,7 @@
 /**
  * Moteur de logique Sokoban : déplacements, poussée de boîtes et victoire.
  */
-public class MoteurSokoban {
+public class LogiqueSokoban {
     private static final int HISTORIQUE_MAX = 300;
 
     private static final class Instantane {
@@ -32,7 +32,7 @@ public class MoteurSokoban {
      *
      * @param plateau plateau source
      */
-    public MoteurSokoban(Case[][] plateau) {
+    public LogiqueSokoban(Case[][] plateau) {
         historique = new java.util.ArrayList<>();
         chargerPlateau(plateau);
     }

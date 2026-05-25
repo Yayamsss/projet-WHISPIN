@@ -8,11 +8,11 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
@@ -30,12 +30,14 @@ public class InterfacePrincipale extends Application {
     private Case[][] plateauActuel;
     private Canvas canvasPlateau;
     private String nomNiveauActuel;
-    private MoteurSokoban moteurJeu;
+    private LogiqueSokoban moteurJeu;
     private Stage stagePrincipal;
     private Scene scenePrincipale;
     private StackPane racinePrincipale;
     private VBox menuPrincipal;
     private Button boutonMenuReduit;
+    private List<Button> boutonsMenuPrincipal;
+    private int indexBoutonMenuPrincipal;
     private boolean modeJeuActif;
     private final FeuArtifice feuArtifice = new FeuArtifice();
     private AnimationTimer animationVictoire;
@@ -64,9 +66,10 @@ public class InterfacePrincipale extends Application {
 
         plateauActuel = creerPlateauApercu();
         nomNiveauActuel = "aperçu";
-        moteurJeu = new MoteurSokoban(plateauActuel);
+        moteurJeu = new LogiqueSokoban(plateauActuel);
+        Animation.reinitialiserAnimationPersonnage();
 
-        ImageView backgroundView = VisuelsFond.creerVueFond();
+        ImageView backgroundView = FondEcran.creerVueFond();
         if (backgroundView != null) {
             racinePrincipale.getChildren().add(backgroundView);
         }
@@ -75,13 +78,33 @@ public class InterfacePrincipale extends Application {
         canvasPlateau.setMouseTransparent(true);
         racinePrincipale.getChildren().add(canvasPlateau);
 
-        menuPrincipal = VisuelsMenu.creerConteneurMenu();
-        Text titre = VisuelsMenu.creerTitre("WHISPIN");
-        Button btnNiveau = VisuelsMenu.creerBoutonMenu("Niveau");
-        Button btnRegles = VisuelsMenu.creerBoutonMenu("Regles du jeu");
-        Button btnSauvegarde = VisuelsMenu.creerBoutonMenu("Sauvegarde");
-        Button btnParamettre = VisuelsMenu.creerBoutonMenu("Paramettre");
-        Button btnQuitter = VisuelsMenu.creerBoutonMenu("Quitter");
+        menuPrincipal = Menu.creerConteneurMenu();
+        Text titre = Menu.creerTitre("WHISPIN");
+        Button btnNiveau = Menu.creerBoutonMenu("Niveau");
+        Button btnRegles = Menu.creerBoutonMenu("Regles du jeu");
+        Button btnSauvegarde = Menu.creerBoutonMenu("Sauvegarde");
+        Button btnParamettre = Menu.creerBoutonMenu("Paramettre");
+        Button btnQuitter = Menu.creerBoutonMenu("Quitter");
+
+        boutonsMenuPrincipal = List.of(
+            btnNiveau,
+            btnRegles,
+            btnSauvegarde,
+            btnParamettre,
+            btnQuitter
+        );
+        indexBoutonMenuPrincipal = 0;
+
+        for (int i = 0; i < boutonsMenuPrincipal.size(); i++) {
+            final int index = i;
+            Button bouton = boutonsMenuPrincipal.get(i);
+            bouton.setOnMouseEntered(event -> indexBoutonMenuPrincipal = index);
+            bouton.focusedProperty().addListener((obs, oldValue, isFocused) -> {
+                if (isFocused) {
+                    indexBoutonMenuPrincipal = index;
+                }
+            });
+        }
 
         btnNiveau.setOnAction(event -> chargerNiveauSelectionne());
         btnRegles.setOnAction(event -> DialoguesMenu.afficherReglesDuJeu());
@@ -102,7 +125,7 @@ public class InterfacePrincipale extends Application {
         StackPane.setAlignment(menuPrincipal, Pos.CENTER_LEFT);
         StackPane.setMargin(menuPrincipal, Insets.EMPTY);
 
-        boutonMenuReduit = VisuelsMenu.creerBoutonMenuReduit("☰");
+        boutonMenuReduit = Menu.creerBoutonMenuReduit("☰");
         boutonMenuReduit.setVisible(false);
         boutonMenuReduit.setManaged(false);
         boutonMenuReduit.setOnAction(event -> {
@@ -117,6 +140,7 @@ public class InterfacePrincipale extends Application {
         StackPane.setMargin(boutonMenuReduit, new Insets(16, 0, 0, 16));
 
         mettreEnPagePlateau(true);
+        mettreAJourVisibilitePlateau();
 
         scenePrincipale = new Scene(racinePrincipale, WINDOW_WIDTH, WINDOW_HEIGHT);
 
@@ -141,17 +165,29 @@ public class InterfacePrincipale extends Application {
                 return;
             }
 
+            if (!modeJeuActif) {
+                if (gererNavigationMenuPrincipal(event)) {
+                    event.consume();
+                }
+                return;
+            }
+
             Direction direction = convertirToucheEnDirection(event.getCode());
             if (direction == null || moteurJeu == null) {
                 return;
             }
 
+            Animation.orienterPersonnage(direction);
+
             if (moteurJeu.deplacer(direction)) {
+                Animation.avancerAnimationPersonnage(direction);
                 plateauActuel = moteurJeu.exporterPlateau();
                 dessinerPlateauActuel();
                 if (moteurJeu.estVictoire()) {
                     lancerAnimationVictoire(this::afficherSceneVictoire);
                 }
+            } else {
+                dessinerPlateauActuel();
             }
         });
 
@@ -162,7 +198,7 @@ public class InterfacePrincipale extends Application {
         dessinerPlateauActuel();
 
         if (backgroundView != null) {
-            VisuelsFond.lierAScene(backgroundView, scenePrincipale);
+            FondEcran.lierAScene(backgroundView, scenePrincipale);
         }
         stage.setTitle("WHISPIN - Menu principal");
         stage.setScene(scenePrincipale);
@@ -171,7 +207,13 @@ public class InterfacePrincipale extends Application {
         stage.setFullScreenExitHint("");
         stage.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
         stage.show();
-        racinePrincipale.requestFocus();
+        Platform.runLater(() -> {
+            if (!modeJeuActif) {
+                focusBoutonMenuPrincipal(indexBoutonMenuPrincipal);
+            } else if (racinePrincipale != null) {
+                racinePrincipale.requestFocus();
+            }
+        });
 
         // Sous Linux/Wayland, une demande de plein écran avant show() peut être ignorée.
         activerPleinEcranEtFocus();
@@ -227,18 +269,23 @@ public class InterfacePrincipale extends Application {
         RenduPlateau.dessinerPlateau(gc, plateauActuel, origineX, origineY, tailleCase);
 
         if (victoireAnimee) {
-            dessinerMielSurRuches(gc, origineX, origineY, tailleCase, tempsAnimationVictoireNs);
             feuArtifice.dessiner(gc, tempsAnimationVictoireNs);
         }
     }
 
     private void chargerNiveauSelectionne() {
-        String niveau = SelectionNiveauxCarte.ouvrir(stagePrincipal, nomNiveauActuel);
-        if (niveau == null) {
-            return;
-        }
-
-        chargerNiveauParNom(niveau);
+        SelectionNiveauxCarte.ouvrir(
+            stagePrincipal,
+            nomNiveauActuel,
+            this::chargerNiveauParNom,
+            () -> {
+                if (!modeJeuActif) {
+                    focusBoutonMenuPrincipal(indexBoutonMenuPrincipal);
+                } else if (racinePrincipale != null) {
+                    racinePrincipale.requestFocus();
+                }
+            }
+        );
     }
 
     private boolean chargerNiveauParNom(String niveau) {
@@ -256,11 +303,13 @@ public class InterfacePrincipale extends Application {
         }
 
         plateauActuel = plateauCharge;
-        moteurJeu = new MoteurSokoban(plateauActuel);
+        moteurJeu = new LogiqueSokoban(plateauActuel);
         nomNiveauActuel = niveau;
+        Animation.reinitialiserAnimationPersonnage();
         arreterAnimationVictoire();
         transitionVictoireEnCours = false;
         modeJeuActif = true;
+        mettreAJourVisibilitePlateau();
         replierMenuJeu();
         dessinerPlateauActuel();
         activerPleinEcranEtFocus();
@@ -275,9 +324,11 @@ public class InterfacePrincipale extends Application {
             stagePrincipal.setScene(scenePrincipale);
         }
         plateauActuel = creerPlateauApercu();
-        moteurJeu = new MoteurSokoban(plateauActuel);
+        moteurJeu = new LogiqueSokoban(plateauActuel);
         nomNiveauActuel = "aperçu";
+        Animation.reinitialiserAnimationPersonnage();
         modeJeuActif = false;
+        mettreAJourVisibilitePlateau();
         deplierMenuJeu();
         dessinerPlateauActuel();
     }
@@ -350,9 +401,7 @@ public class InterfacePrincipale extends Application {
         boutonMenuReduit.setVisible(modeJeuActif);
         boutonMenuReduit.setManaged(modeJeuActif);
         mettreEnPagePlateau(true);
-        if (racinePrincipale != null) {
-            racinePrincipale.requestFocus();
-        }
+        Platform.runLater(() -> focusBoutonMenuPrincipal(indexBoutonMenuPrincipal));
     }
 
     private void gererSauvegarde() {
@@ -364,15 +413,15 @@ public class InterfacePrincipale extends Application {
         switch (action) {
             case "Sauvegarder":
                 sauvegarderEtatCourant();
-                return;
+                break;
             case "Charger":
                 chargerSauvegarde();
-                return;
+                break;
             case "Lister":
                 DialoguesMenu.afficherSauvegardes();
-                return;
+                break;
             default:
-                return;
+                break;
         }
     }
 
@@ -400,11 +449,13 @@ public class InterfacePrincipale extends Application {
             }
 
             plateauActuel = sauvegarde.getPlateau();
-            moteurJeu = new MoteurSokoban(plateauActuel);
+            moteurJeu = new LogiqueSokoban(plateauActuel);
             nomNiveauActuel = sauvegarde.getNiveau();
+            Animation.reinitialiserAnimationPersonnage();
             arreterAnimationVictoire();
             transitionVictoireEnCours = false;
             modeJeuActif = true;
+            mettreAJourVisibilitePlateau();
             if (stagePrincipal != null && scenePrincipale != null && stagePrincipal.getScene() != scenePrincipale) {
                 stagePrincipal.setScene(scenePrincipale);
             }
@@ -468,64 +519,6 @@ public class InterfacePrincipale extends Application {
         debutAnimationVictoireNs = 0L;
     }
 
-    private void dessinerMielSurRuches(
-        GraphicsContext gc,
-        double origineX,
-        double origineY,
-        double tailleCase,
-        long tempsNs
-    ) {
-        if (plateauActuel == null) {
-            return;
-        }
-
-        double temps = tempsNs / 1_000_000_000.0;
-        double phase = (Math.sin(temps * 7.0) + 1.0) * 0.5;
-
-        for (int y = 0; y < plateauActuel.length; y++) {
-            if (plateauActuel[y] == null) {
-                continue;
-            }
-            for (int x = 0; x < plateauActuel[y].length; x++) {
-                Case caseJeu = plateauActuel[y][x];
-                if (!estCaseRuche(caseJeu)) {
-                    continue;
-                }
-
-                double px = origineX + x * tailleCase;
-                double py = origineY + y * tailleCase;
-
-                double rucheX = px + tailleCase * 0.22;
-                double rucheY = py + tailleCase * 0.24;
-                double rucheL = tailleCase * 0.56;
-                double rucheH = tailleCase * 0.56;
-
-                double sortieX = rucheX + rucheL * 0.50;
-                double sortieY = rucheY + rucheH * 0.62;
-                double goutteHauteur = tailleCase * (0.14 + 0.16 * phase);
-                double largeurMiel = tailleCase * 0.09;
-
-                gc.setStroke(Color.color(0.95, 0.67, 0.08, 0.92));
-                gc.setLineWidth(Math.max(2.0, tailleCase * 0.05));
-                gc.strokeLine(sortieX, sortieY, sortieX, sortieY + goutteHauteur);
-
-                gc.setFill(Color.color(0.98, 0.77, 0.12, 0.95));
-                gc.fillOval(
-                    sortieX - largeurMiel * 0.55,
-                    sortieY + goutteHauteur - largeurMiel * 0.2,
-                    largeurMiel * 1.1,
-                    largeurMiel * 1.25
-                );
-            }
-        }
-    }
-
-    private boolean estCaseRuche(Case caseJeu) {
-        return caseJeu instanceof CaseCible
-            || caseJeu instanceof CaseBoiteCible
-            || caseJeu instanceof CasePersonnageCible;
-    }
-
     private void activerPleinEcranEtFocus() {
         if (stagePrincipal == null) {
             return;
@@ -538,6 +531,56 @@ public class InterfacePrincipale extends Application {
                 stagePrincipal.getScene().getRoot().requestFocus();
             }
         });
+    }
+
+    private void mettreAJourVisibilitePlateau() {
+        if (canvasPlateau == null) {
+            return;
+        }
+
+        canvasPlateau.setVisible(modeJeuActif);
+        canvasPlateau.setManaged(modeJeuActif);
+    }
+
+    private boolean gererNavigationMenuPrincipal(KeyEvent event) {
+        if (event == null || menuPrincipal == null || !menuPrincipal.isVisible()) {
+            return false;
+        }
+        if (boutonsMenuPrincipal == null || boutonsMenuPrincipal.isEmpty()) {
+            return false;
+        }
+
+        KeyCode code = event.getCode();
+        if (code == KeyCode.UP || code == KeyCode.Z || code == KeyCode.W) {
+            focusBoutonMenuPrincipal(indexBoutonMenuPrincipal - 1);
+            return true;
+        }
+        if (code == KeyCode.DOWN || code == KeyCode.S) {
+            focusBoutonMenuPrincipal(indexBoutonMenuPrincipal + 1);
+            return true;
+        }
+        if (code == KeyCode.TAB) {
+            focusBoutonMenuPrincipal(indexBoutonMenuPrincipal + (event.isShiftDown() ? -1 : 1));
+            return true;
+        }
+        if (code == KeyCode.ENTER || code == KeyCode.SPACE) {
+            boutonsMenuPrincipal.get(indexBoutonMenuPrincipal).fire();
+            return true;
+        }
+        return false;
+    }
+
+    private void focusBoutonMenuPrincipal(int indexSouhaite) {
+        if (boutonsMenuPrincipal == null || boutonsMenuPrincipal.isEmpty()) {
+            return;
+        }
+
+        int taille = boutonsMenuPrincipal.size();
+        indexBoutonMenuPrincipal = ((indexSouhaite % taille) + taille) % taille;
+        Button bouton = boutonsMenuPrincipal.get(indexBoutonMenuPrincipal);
+        if (bouton != null) {
+            bouton.requestFocus();
+        }
     }
 
     private Direction convertirToucheEnDirection(KeyCode code) {

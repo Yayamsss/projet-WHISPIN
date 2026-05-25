@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -9,33 +10,32 @@ import javafx.animation.Timeline;
 import javafx.geometry.Insets;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.StrokeLineCap;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
-import javafx.stage.Modality;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
 /**
- * Affiche une carte de sélection de niveaux avec déplacement animé de l'abeille.
+ * Affiche une scène de sélection de niveaux sur la fenêtre principale.
  */
 public final class SelectionNiveauxCarte {
+    private static final double TAILLE_PERSONNAGE_NAVIGATEUR = 56.0;
+    private static final double DECALAGE_VERTICAL_PERSONNAGE = 0.92;
+    private static final Duration DUREE_ETAPE_DEPLACEMENT = Duration.millis(380);
+
     private static final String STYLE_BOUTON_ACTUEL =
         "-fx-background-color: linear-gradient(to bottom, #ffd96f, #ffab3c);"
         + "-fx-text-fill: #4b2a00;"
@@ -58,38 +58,43 @@ public final class SelectionNiveauxCarte {
     }
 
     /**
-     * Ouvre la carte des niveaux et retourne le niveau sélectionné.
+     * Ouvre la carte des niveaux dans une nouvelle scène du même stage.
      *
-     * @param proprietaire fenêtre parente
-     * @param niveauActuel niveau courant pour positionner l'abeille
-     * @return nom du niveau choisi, ou null si annulé
+     * @param proprietaire stage principal
+     * @param niveauActuel niveau courant pour positionner le personnage
+     * @param onSelection callback appelé avec le niveau choisi
+     * @param onCancel callback appelé à l'annulation
      */
-    public static String ouvrir(Stage proprietaire, String niveauActuel) {
+    public static void ouvrir(Stage proprietaire, String niveauActuel, Consumer<String> onSelection, Runnable onCancel) {
+        if (proprietaire == null) {
+            if (onCancel != null) {
+                onCancel.run();
+            }
+            return;
+        }
+
         List<String> niveaux = ParcourirFichiers.listerFichiers("niveau", ".txt");
         if (niveaux.isEmpty()) {
             DialoguesMenu.afficherInformation("Niveau", "Aucun niveau detecte dans le dossier niveau.");
-            return null;
+            if (onCancel != null) {
+                onCancel.run();
+            }
+            return;
         }
 
-        Stage dialogue = new Stage();
-        dialogue.initModality(Modality.APPLICATION_MODAL);
-        if (proprietaire != null) {
-            dialogue.initOwner(proprietaire);
-        }
-        dialogue.setTitle("Carte des niveaux");
+        Scene scenePrecedente = proprietaire.getScene();
 
         int indexActuel = Math.max(0, niveaux.indexOf(niveauActuel));
 
-        double largeur = Screen.getPrimary().getVisualBounds().getWidth();
-        double hauteur = Screen.getPrimary().getVisualBounds().getHeight();
+        double largeur = scenePrecedente != null ? scenePrecedente.getWidth() : 0.0;
+        double hauteur = scenePrecedente != null ? scenePrecedente.getHeight() : 0.0;
+        if (largeur <= 0 || hauteur <= 0) {
+            largeur = Screen.getPrimary().getVisualBounds().getWidth();
+            hauteur = Screen.getPrimary().getVisualBounds().getHeight();
+        }
 
         Pane carte = new Pane();
         carte.setPrefSize(largeur, hauteur);
-        carte.setBackground(
-            new Background(
-                new BackgroundFill(Color.web("#c7ebff"), CornerRadii.EMPTY, Insets.EMPTY)
-            )
-        );
 
         Text titre = new Text("Choix du niveau");
         titre.setFill(Color.web("#2b3d57"));
@@ -101,15 +106,28 @@ public final class SelectionNiveauxCarte {
         List<Point2D> pointsNiveaux = creerPointsChemin(niveaux.size(), largeur, hauteur);
         dessinerChemin(carte, pointsNiveaux);
 
-        Group abeille = creerAbeille();
+        ImageView personnage = creerPersonnageNavigateur();
         Point2D depart = pointsNiveaux.get(indexActuel);
-        abeille.setLayoutX(depart.getX());
-        abeille.setLayoutY(depart.getY() - 42);
-        carte.getChildren().add(abeille);
+        personnage.setLayoutX(depart.getX() - personnage.getFitWidth() / 2.0);
+        personnage.setLayoutY(depart.getY() - personnage.getFitHeight() * DECALAGE_VERTICAL_PERSONNAGE);
+        carte.getChildren().add(personnage);
 
-        final int[] indexAbeille = new int[] { indexActuel };
-        final String[] selection = new String[] { null };
+        final int[] indexPersonnage = new int[] { indexActuel };
         final boolean[] animationEnCours = new boolean[] { false };
+
+        Runnable annulerSelection = () -> {
+            proprietaire.setScene(scenePrecedente);
+            if (onCancel != null) {
+                onCancel.run();
+            }
+        };
+
+        Consumer<String> validerSelection = niveau -> {
+            proprietaire.setScene(scenePrecedente);
+            if (onSelection != null) {
+                onSelection.accept(niveau);
+            }
+        };
 
         ArrayList<Button> boutons = new ArrayList<>();
         for (int i = 0; i < niveaux.size(); i++) {
@@ -121,9 +139,8 @@ public final class SelectionNiveauxCarte {
 
             final int indexCible = i;
             bouton.setOnAction(event -> {
-                if (indexCible == indexAbeille[0]) {
-                    selection[0] = niveaux.get(indexCible);
-                    dialogue.close();
+                if (indexCible == indexPersonnage[0]) {
+                    validerSelection.accept(niveaux.get(indexCible));
                     return;
                 }
 
@@ -133,9 +150,9 @@ public final class SelectionNiveauxCarte {
 
                 animationEnCours[0] = true;
 
-                animerAbeille(abeille, pointsNiveaux, indexAbeille[0], indexCible, () -> {
-                    indexAbeille[0] = indexCible;
-                    appliquerStylesNiveaux(boutons, indexAbeille[0]);
+                animerPersonnage(personnage, pointsNiveaux, indexPersonnage[0], indexCible, () -> {
+                    indexPersonnage[0] = indexCible;
+                    appliquerStylesNiveaux(boutons, indexPersonnage[0]);
                     animationEnCours[0] = false;
                 });
             });
@@ -143,7 +160,7 @@ public final class SelectionNiveauxCarte {
             boutons.add(bouton);
             carte.getChildren().add(bouton);
         }
-        appliquerStylesNiveaux(boutons, indexAbeille[0]);
+        appliquerStylesNiveaux(boutons, indexPersonnage[0]);
 
         Button annuler = new Button("Annuler");
         annuler.setStyle(
@@ -156,23 +173,30 @@ public final class SelectionNiveauxCarte {
         annuler.setLayoutX(largeur - 130);
         annuler.setLayoutY(24);
         annuler.setFocusTraversable(false);
-        annuler.setOnAction(event -> dialogue.close());
+        annuler.setOnAction(event -> annulerSelection.run());
         carte.getChildren().add(annuler);
 
-        StackPane racine = new StackPane(carte);
+        StackPane racine = new StackPane();
+        ImageView fond = FondEcran.creerVueFond();
+        if (fond != null) {
+            racine.getChildren().add(fond);
+        }
+        racine.getChildren().add(carte);
         racine.setFocusTraversable(true);
         Scene scene = new Scene(racine, largeur, hauteur);
+        if (fond != null) {
+            FondEcran.lierAScene(fond, scene);
+        }
         scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             if (event.getCode() == KeyCode.ESCAPE) {
                 event.consume();
-                dialogue.close();
+                annulerSelection.run();
                 return;
             }
 
             if (event.getCode() == KeyCode.ENTER || event.getCode() == KeyCode.SPACE) {
                 event.consume();
-                selection[0] = niveaux.get(indexAbeille[0]);
-                dialogue.close();
+                validerSelection.accept(niveaux.get(indexPersonnage[0]));
                 return;
             }
 
@@ -206,31 +230,22 @@ public final class SelectionNiveauxCarte {
                 return;
             }
 
-            int indexCible = indexAbeille[0] + delta;
+            int indexCible = indexPersonnage[0] + delta;
             if (indexCible < 0 || indexCible >= niveaux.size()) {
                 return;
             }
 
             animationEnCours[0] = true;
 
-            animerAbeille(abeille, pointsNiveaux, indexAbeille[0], indexCible, () -> {
-                indexAbeille[0] = indexCible;
-                appliquerStylesNiveaux(boutons, indexAbeille[0]);
+            animerPersonnage(personnage, pointsNiveaux, indexPersonnage[0], indexCible, () -> {
+                indexPersonnage[0] = indexCible;
+                appliquerStylesNiveaux(boutons, indexPersonnage[0]);
                 animationEnCours[0] = false;
             });
         });
 
-        dialogue.setScene(scene);
-        dialogue.setResizable(true);
-        dialogue.setFullScreenExitHint("");
-        dialogue.setFullScreenExitKeyCombination(KeyCombination.NO_MATCH);
-        dialogue.setOnShown(event -> {
-            dialogue.setFullScreen(true);
-            racine.requestFocus();
-        });
-        dialogue.showAndWait();
-
-        return selection[0];
+        proprietaire.setScene(scene);
+        racine.requestFocus();
     }
 
     private static List<Point2D> creerPointsChemin(int nombreNiveaux, double largeur, double hauteur) {
@@ -311,23 +326,19 @@ public final class SelectionNiveauxCarte {
         return sansExtension;
     }
 
-    private static Group creerAbeille() {
-        Circle aileGauche = new Circle(-10, -8, 10, Color.web("#d9f3ff", 0.85));
-        Circle aileDroite = new Circle(10, -8, 10, Color.web("#d9f3ff", 0.85));
-
-        Circle corps = new Circle(0, 0, 14, Color.web("#ffd74a"));
-        Circle bande1 = new Circle(-5, 0, 3.3, Color.web("#222222"));
-        Circle bande2 = new Circle(1, 0, 3.3, Color.web("#222222"));
-        Circle bande3 = new Circle(7, 0, 3.3, Color.web("#222222"));
-
-        Circle tete = new Circle(14, 0, 6, Color.web("#ffcc59"));
-        Circle oeil = new Circle(16, -1.5, 1.2, Color.web("#111111"));
-
-        return new Group(aileGauche, aileDroite, corps, bande1, bande2, bande3, tete, oeil);
+    private static ImageView creerPersonnageNavigateur() {
+        Animation.reinitialiserAnimationPersonnage();
+        Image image = Animation.getPersonnage();
+        ImageView personnage = new ImageView(image);
+        personnage.setFitWidth(TAILLE_PERSONNAGE_NAVIGATEUR);
+        personnage.setFitHeight(TAILLE_PERSONNAGE_NAVIGATEUR);
+        personnage.setPreserveRatio(true);
+        personnage.setMouseTransparent(true);
+        return personnage;
     }
 
-    private static void animerAbeille(
-        Group abeille,
+    private static void animerPersonnage(
+        ImageView personnage,
         List<Point2D> points,
         int indexDepart,
         int indexArrivee,
@@ -341,17 +352,19 @@ public final class SelectionNiveauxCarte {
             int suivant = i + pas;
             Point2D from = points.get(i);
             Point2D to = points.get(suivant);
+            Direction direction = directionEntre(from, to);
+            mettreAJourSpriteNavigation(personnage, direction);
 
             Timeline etape = new Timeline(
                 new KeyFrame(
                     Duration.ZERO,
-                    new KeyValue(abeille.layoutXProperty(), from.getX()),
-                    new KeyValue(abeille.layoutYProperty(), from.getY() - 42)
+                    new KeyValue(personnage.layoutXProperty(), from.getX() - personnage.getFitWidth() / 2.0),
+                    new KeyValue(personnage.layoutYProperty(), from.getY() - personnage.getFitHeight() * DECALAGE_VERTICAL_PERSONNAGE)
                 ),
                 new KeyFrame(
-                    Duration.millis(260),
-                    new KeyValue(abeille.layoutXProperty(), to.getX(), Interpolator.EASE_BOTH),
-                    new KeyValue(abeille.layoutYProperty(), to.getY() - 42, Interpolator.EASE_BOTH)
+                    DUREE_ETAPE_DEPLACEMENT,
+                    new KeyValue(personnage.layoutXProperty(), to.getX() - personnage.getFitWidth() / 2.0, Interpolator.EASE_BOTH),
+                    new KeyValue(personnage.layoutYProperty(), to.getY() - personnage.getFitHeight() * DECALAGE_VERTICAL_PERSONNAGE, Interpolator.EASE_BOTH)
                 )
             );
             sequence.getChildren().add(etape);
@@ -360,5 +373,23 @@ public final class SelectionNiveauxCarte {
 
         sequence.setOnFinished(event -> onTermine.run());
         sequence.play();
+    }
+
+    private static Direction directionEntre(Point2D from, Point2D to) {
+        double dx = to.getX() - from.getX();
+        double dy = to.getY() - from.getY();
+        if (Math.abs(dx) >= Math.abs(dy)) {
+            return dx >= 0 ? Direction.DROITE : Direction.GAUCHE;
+        }
+        return dy >= 0 ? Direction.BAS : Direction.HAUT;
+    }
+
+    private static void mettreAJourSpriteNavigation(ImageView personnage, Direction direction) {
+        Animation.orienterPersonnage(direction);
+        Animation.avancerAnimationPersonnage(direction);
+        Image image = Animation.getPersonnage();
+        if (image != null) {
+            personnage.setImage(image);
+        }
     }
 }

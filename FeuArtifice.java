@@ -107,15 +107,6 @@ public class FeuArtifice {
                 );
                 gc.strokeLine(x1, y1, x2, y2);
             }
-
-            double rayonNoyau = Math.max(2.0, rayon * 0.08);
-            gc.setFill(Color.color(1.0, 1.0, 1.0, opacite * 0.9));
-            gc.fillOval(
-                explosion.centreX - rayonNoyau,
-                explosion.centreY - rayonNoyau,
-                rayonNoyau * 2,
-                rayonNoyau * 2
-            );
         }
     }
 

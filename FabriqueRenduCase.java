@@ -4,6 +4,7 @@
 public final class FabriqueRenduCase {
     private static final RenduCase RENDU_VIDE = new RenduCaseVide();
     private static final RenduCase RENDU_MUR = new RenduCaseMur();
+    private static final RenduCase RENDU_MONDE = new RenduCaseMonde();
     private static final RenduCase RENDU_BOITE = new RenduCaseBoite();
     private static final RenduCase RENDU_BOITE_CIBLE = new RenduCaseBoiteCible();
     private static final RenduCase RENDU_PERSONNAGE = new RenduCasePersonnage();
@@ -21,6 +22,9 @@ public final class FabriqueRenduCase {
     public static RenduCase depuisCase(Case caseJeu) {
         if (caseJeu instanceof CaseMur) {
             return RENDU_MUR;
+        }
+        if (caseJeu instanceof CaseMonde) {
+            return RENDU_MONDE;
         }
         if (caseJeu instanceof CaseBoiteCible) {
             return RENDU_BOITE_CIBLE;

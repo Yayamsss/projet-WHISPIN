@@ -62,6 +62,15 @@ public class Case {
     }
 
     /**
+     * Indique si la case représente un monde récursif.
+     *
+     * @return true si la case est un monde récursif, false sinon
+     */
+    public boolean estMonde() {
+        return false;
+    }
+
+    /**
      * Indique si la case contient un personnage (potentiellement sur cible).
      *
      * @return true si la case contient le personnage, false sinon

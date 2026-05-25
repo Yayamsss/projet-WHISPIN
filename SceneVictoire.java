@@ -48,14 +48,14 @@ public final class SceneVictoire {
         score.setFill(Color.web("#FFDFA2"));
         score.setFont(Font.font("Verdana", FontWeight.SEMI_BOLD, 28));
 
-        Button boutonProchain = VisuelsMenu.creerBoutonMenu("Prochain niveau");
+        Button boutonProchain = Menu.creerBoutonMenu("Prochain niveau");
         if (niveauSuivant == null) {
             boutonProchain.setText("Dernier niveau atteint");
             boutonProchain.setDisable(true);
             boutonProchain.setOpacity(0.7);
         }
 
-        Button boutonMenu = VisuelsMenu.creerBoutonMenu("Retour au menu");
+        Button boutonMenu = Menu.creerBoutonMenu("Retour au menu");
 
         boutonProchain.setOnAction(event -> {
             if (actionProchain != null) {
@@ -72,7 +72,7 @@ public final class SceneVictoire {
         panneau.getChildren().addAll(titre, score, boutonProchain, boutonMenu);
 
         StackPane fond = new StackPane();
-        ImageView fondVictoire = VisuelsFond.creerVueFond();
+        ImageView fondVictoire = FondEcran.creerVueFond();
         if (fondVictoire != null) {
             fond.getChildren().add(fondVictoire);
         } else {
@@ -89,7 +89,7 @@ public final class SceneVictoire {
 
         Scene scene = new Scene(fond, largeur, hauteur);
         if (fondVictoire != null) {
-            VisuelsFond.lierAScene(fondVictoire, scene);
+            FondEcran.lierAScene(fondVictoire, scene);
         }
         return scene;
     }
