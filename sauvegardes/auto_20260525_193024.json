@@ -1,0 +1,7 @@
+{
+  "version" : 1,
+  "type" : "plateau",
+  "niveau" : "niveau_01.txt",
+  "horodatage" : 1779730224455,
+  "plateau" : [ "######", "#    #", "#  @ #", "# ** #", "#    #", "######" ]
+}
