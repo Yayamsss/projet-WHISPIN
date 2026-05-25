@@ -1,9 +1,0 @@
-class/
-target/
-doc/
-assets/Save/CustomLevel.lvl
-assets/Save/LevelSave.lvl
-assets/Save/MoveLogs.txt
-assets/Save/SaveData.bin
-*.class
-.vscode/
