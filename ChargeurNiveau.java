@@ -162,7 +162,7 @@ public final class ChargeurNiveau {
             String ligne = lignes.get(y) == null ? "" : lignes.get(y);
             for (int x = 0; x < largeur; x++) {
                 char c = x < ligne.length() ? ligne.charAt(x) : ' ';
-                plateau[y][x] = ConvertisseurCases.depuisSymboleTolérant(c, x, y);
+                plateau[y][x] = ConvertisseurCases.depuisSymboleTolerant(c, x, y);
             }
         }
         return plateau;
@@ -187,7 +187,7 @@ public final class ChargeurNiveau {
             String ligne = grille[y] == null ? "" : grille[y];
             for (int x = 0; x < largeur; x++) {
                 char c = x < ligne.length() ? ligne.charAt(x) : ' ';
-                plateau[y][x] = ConvertisseurCases.depuisSymboleTolérant(c, x, y);
+                plateau[y][x] = ConvertisseurCases.depuisSymboleTolerant(c, x, y);
             }
         }
         return plateau;

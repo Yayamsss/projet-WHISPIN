@@ -1,0 +1,8 @@
+{
+  "version" : 1,
+  "type" : "plateau",
+  "niveau" : "aperçu",
+  "horodatage" : 1779733227756,
+  "plateau" : [ "############", "#          #", "#      @*  #", "#          #", "#       *  #", "#          #", "#  *       #", "#          #", "#          #", "############" ],
+  "solution_sokobano" : "ul2drdl2d4r3u6l3u5r"
+}

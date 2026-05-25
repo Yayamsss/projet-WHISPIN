@@ -29,6 +29,7 @@ public final class ServicePersistance {
     private static final String CLE_NIVEAU = "niveau";
     private static final String CLE_HORODATAGE = "horodatage";
     private static final String CLE_PLATEAU = "plateau";
+    private static final String CLE_SOLUTION_SOKOBANO = "solution_sokobano";
 
     private static final int VERSION_SAUVEGARDE_JSON = 1;
     private static final String TYPE_SAUVEGARDE_PLATEAU = "plateau";
@@ -77,10 +78,12 @@ public final class ServicePersistance {
     public static final class SauvegardeChargee {
         private final String niveau;
         private final Case[][] plateau;
+        private final String solutionSokobano;
 
-        public SauvegardeChargee(String niveau, Case[][] plateau) {
+        public SauvegardeChargee(String niveau, Case[][] plateau, String solutionSokobano) {
             this.niveau = niveau;
             this.plateau = plateau;
+            this.solutionSokobano = solutionSokobano;
         }
 
         public String getNiveau() {
@@ -89,6 +92,10 @@ public final class ServicePersistance {
 
         public Case[][] getPlateau() {
             return plateau;
+        }
+
+        public String getSolutionSokobano() {
+            return solutionSokobano;
         }
     }
 
@@ -124,7 +131,7 @@ public final class ServicePersistance {
     /**
      * Liste les sauvegardes JSON triées de la plus récente à la plus ancienne.
      */
-    public static ArrayList<SauvegardeInfo> listerSauvegardesInfos() throws IOException {
+    public static List<SauvegardeInfo> listerSauvegardesInfos() throws IOException {
         if (!Files.exists(DOSSIER_SAUVEGARDES)) {
             return new ArrayList<>();
         }
@@ -163,13 +170,19 @@ public final class ServicePersistance {
      * @param plateau plateau courant
      * @throws IOException en cas d'erreur d'écriture
      */
-    public static void sauvegarderSessionJson(Path cheminFichier, String nomNiveau, Case[][] plateau) throws IOException {
+    public static void sauvegarderSessionJson(
+        Path cheminFichier,
+        String nomNiveau,
+        Case[][] plateau,
+        String solutionSokobano
+    ) throws IOException {
         Map<String, Object> donneesJson = new LinkedHashMap<>();
         donneesJson.put(CLE_VERSION, VERSION_SAUVEGARDE_JSON);
         donneesJson.put(CLE_TYPE, TYPE_SAUVEGARDE_PLATEAU);
         donneesJson.put(CLE_NIVEAU, nomNiveau == null ? "inconnu" : nomNiveau);
         donneesJson.put(CLE_HORODATAGE, System.currentTimeMillis());
         donneesJson.put(CLE_PLATEAU, convertirPlateauVersLignes(plateau));
+        donneesJson.put(CLE_SOLUTION_SOKOBANO, solutionSokobano == null ? "" : solutionSokobano);
 
         ecrireDansFichierJson(cheminFichier, donneesJson);
     }
@@ -189,9 +202,10 @@ public final class ServicePersistance {
         );
 
         String niveau = lireChampTexte(donneesJson.get(CLE_NIVEAU), CLE_NIVEAU);
-        ArrayList<String> lignes = lireChampListeTexte(donneesJson.get(CLE_PLATEAU), CLE_PLATEAU);
+        List<String> lignes = lireChampListeTexte(donneesJson.get(CLE_PLATEAU), CLE_PLATEAU);
         Case[][] plateau = convertirLignesVersPlateau(lignes);
-        return new SauvegardeChargee(niveau, plateau);
+        String solutionSokobano = lireChampTexteOptionnel(donneesJson.get(CLE_SOLUTION_SOKOBANO));
+        return new SauvegardeChargee(niveau, plateau, solutionSokobano);
     }
 
     private static void ecrireDansFichierJson(Path cheminFichier, Map<String, Object> donneesJson) throws IOException {
@@ -208,7 +222,17 @@ public final class ServicePersistance {
         throw new IllegalArgumentException("Champ JSON invalide (String attendu): " + nomChamp);
     }
 
-    private static ArrayList<String> lireChampListeTexte(Object valeurChamp, String nomChamp) {
+    private static String lireChampTexteOptionnel(Object valeurChamp) {
+        if (valeurChamp == null) {
+            return "";
+        }
+        if (valeurChamp instanceof String texte) {
+            return texte;
+        }
+        throw new IllegalArgumentException("Champ JSON invalide (String attendu): " + CLE_SOLUTION_SOKOBANO);
+    }
+
+    private static List<String> lireChampListeTexte(Object valeurChamp, String nomChamp) {
         if (!(valeurChamp instanceof List<?> listeValeurs)) {
             throw new IllegalArgumentException("Champ JSON invalide (liste attendue): " + nomChamp);
         }

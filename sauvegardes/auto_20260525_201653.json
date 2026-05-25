@@ -1,0 +1,8 @@
+{
+  "version" : 1,
+  "type" : "plateau",
+  "niveau" : "niveau_01.txt",
+  "horodatage" : 1779733013266,
+  "plateau" : [ "######", "#   @#", "#  $ #", "# *. #", "#    #", "######" ],
+  "solution_sokobano" : "rdu2r"
+}

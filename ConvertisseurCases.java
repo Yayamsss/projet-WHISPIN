@@ -37,11 +37,19 @@ public final class ConvertisseurCases {
     /**
      * Convertit un symbole tolérant certains alias de vide.
      */
-    public static Case depuisSymboleTolérant(char symbole, int x, int y) {
+    public static Case depuisSymboleTolerant(char symbole, int x, int y) {
         if (symbole == '-' || symbole == '_') {
             return new CaseVide(x, y);
         }
         return depuisSymbole(symbole, x, y);
+    }
+
+    /**
+     * @deprecated Utiliser depuisSymboleTolerant pour eviter les accents dans les API.
+     */
+    @Deprecated
+    public static Case depuisSymboleTolérant(char symbole, int x, int y) {
+        return depuisSymboleTolerant(symbole, x, y);
     }
 
     /**

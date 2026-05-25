@@ -1,3 +1,4 @@
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -8,8 +9,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -49,6 +48,7 @@ public final class SceneChoixPersonnage {
         final String[] selectionCourante = {
             personnages.contains(personnageActuel) ? personnageActuel : personnages.get(0)
         };
+        final int[] indexSelection = { personnages.indexOf(selectionCourante[0]) };
 
         BorderPane panneau = new BorderPane();
         panneau.setStyle("-fx-background-color: rgba(8,14,30,0.72);");
@@ -72,7 +72,7 @@ public final class SceneChoixPersonnage {
         Label nomApercu = new Label();
         nomApercu.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #f8fafc;");
 
-        Label aide = new Label("Entrer: valider   ESC: retour");
+        Label aide = new Label("Navigation: Fleches/ZQSD ou Tab   Valider: Entree/Espace   Retour: ESC");
         aide.setStyle("-fx-font-size: 13px; -fx-text-fill: #93c5fd;");
 
         VBox panneauApercu = new VBox(14, apercu, nomApercu, aide);
@@ -93,8 +93,11 @@ public final class SceneChoixPersonnage {
         grille.setVgap(14);
         grille.setPrefColumns(3);
         grille.setPadding(new Insets(4));
+        List<VBox> cartesPersonnages = new ArrayList<>();
 
-        for (String id : personnages) {
+        for (int i = 0; i < personnages.size(); i++) {
+            final int index = i;
+            String id = personnages.get(i);
             ImageView vignette = new ImageView(Animation.getApercuPersonnage(id));
             vignette.setFitWidth(72);
             vignette.setFitHeight(72);
@@ -108,7 +111,9 @@ public final class SceneChoixPersonnage {
             btnVoir.setStyle("-fx-font-size: 13px; -fx-background-color: #2563eb; -fx-text-fill: #f8fafc;");
             btnVoir.setOnAction(event -> {
                 selectionCourante[0] = id;
+                indexSelection[0] = index;
                 rafraichirApercu.run();
+                mettreAJourSelectionCartes(cartesPersonnages, indexSelection[0]);
             });
 
             VBox carte = new VBox(8, vignette, nom, btnVoir);
@@ -117,10 +122,14 @@ public final class SceneChoixPersonnage {
             carte.setStyle("-fx-background-color: rgba(30,41,59,0.84); -fx-background-radius: 12;");
             carte.setOnMouseClicked(event -> {
                 selectionCourante[0] = id;
+                indexSelection[0] = index;
                 rafraichirApercu.run();
+                mettreAJourSelectionCartes(cartesPersonnages, indexSelection[0]);
             });
+            cartesPersonnages.add(carte);
             grille.getChildren().add(carte);
         }
+        mettreAJourSelectionCartes(cartesPersonnages, indexSelection[0]);
 
         ScrollPane scroll = new ScrollPane(grille);
         scroll.setFitToWidth(true);
@@ -166,20 +175,39 @@ public final class SceneChoixPersonnage {
         if (fond != null) {
             FondEcran.lierAScene(fond, sceneChoix);
         }
-        sceneChoix.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
-            if (event.getCode() == KeyCode.ESCAPE) {
-                if (onRetour != null) {
-                    onRetour.run();
-                }
-                event.consume();
-                return;
-            }
-            if (event.getCode() == KeyCode.ENTER) {
-                btnValider.fire();
-                event.consume();
-            }
-        });
+        NavigationClavierUI.installerNavigationGrille(
+            sceneChoix,
+            personnages.size(),
+            3,
+            indexSelection[0],
+            nouvelIndex -> {
+                indexSelection[0] = nouvelIndex;
+                selectionCourante[0] = personnages.get(nouvelIndex);
+                rafraichirApercu.run();
+                mettreAJourSelectionCartes(cartesPersonnages, indexSelection[0]);
+            },
+            btnValider::fire,
+            onRetour,
+            true
+        );
 
         return sceneChoix;
+    }
+
+    private static void mettreAJourSelectionCartes(List<VBox> cartes, int indexSelection) {
+        for (int i = 0; i < cartes.size(); i++) {
+            VBox carte = cartes.get(i);
+            if (i == indexSelection) {
+                carte.setStyle(
+                    "-fx-background-color: rgba(59,130,246,0.88);"
+                        + "-fx-background-radius: 12;"
+                        + "-fx-border-color: #bfdbfe;"
+                        + "-fx-border-width: 2;"
+                        + "-fx-border-radius: 12;"
+                );
+            } else {
+                carte.setStyle("-fx-background-color: rgba(30,41,59,0.84); -fx-background-radius: 12;");
+            }
+        }
     }
 }

@@ -3,6 +3,9 @@
  */
 public class LogiqueSokoban {
     private static final int HISTORIQUE_MAX = 300;
+    private static final int RESULTAT_ECHEC = 0;
+    private static final int RESULTAT_CONTINUER = 1;
+    private static final int RESULTAT_FINALISE = 2;
 
     private static final class ContexteRecursif {
         private final char mondeParent;
@@ -23,6 +26,7 @@ public class LogiqueSokoban {
         private final java.util.ArrayList<ContexteRecursif> pileMonde;
         private final int coups;
         private final boolean victoire;
+        private final String sequenceCoups;
 
         private Instantane(
             java.util.LinkedHashMap<Character, char[][]> mondes,
@@ -30,7 +34,8 @@ public class LogiqueSokoban {
             char mondeActuel,
             java.util.ArrayList<ContexteRecursif> pileMonde,
             int coups,
-            boolean victoire
+            boolean victoire,
+            String sequenceCoups
         ) {
             this.mondes = mondes;
             this.identifiantRacine = identifiantRacine;
@@ -38,6 +43,7 @@ public class LogiqueSokoban {
             this.pileMonde = pileMonde;
             this.coups = coups;
             this.victoire = victoire;
+            this.sequenceCoups = sequenceCoups;
         }
     }
 
@@ -47,6 +53,7 @@ public class LogiqueSokoban {
     private java.util.ArrayList<ContexteRecursif> pileMonde;
     private int coups;
     private boolean victoire;
+    private StringBuilder sequenceCoups;
     private final java.util.ArrayList<Instantane> historique;
 
     /**
@@ -58,6 +65,7 @@ public class LogiqueSokoban {
         historique = new java.util.ArrayList<>();
         mondes = new java.util.LinkedHashMap<>();
         pileMonde = new java.util.ArrayList<>();
+        sequenceCoups = new StringBuilder();
         chargerPlateau(plateau);
     }
 
@@ -68,6 +76,7 @@ public class LogiqueSokoban {
         historique = new java.util.ArrayList<>();
         mondes = new java.util.LinkedHashMap<>();
         pileMonde = new java.util.ArrayList<>();
+        sequenceCoups = new StringBuilder();
         chargerNiveauRecursif(niveau);
     }
 
@@ -84,10 +93,7 @@ public class LogiqueSokoban {
         identifiantRacine = 'A';
         mondeActuel = identifiantRacine;
         mondes.put(identifiantRacine, grille);
-
-        coups = 0;
-        victoire = verifierVictoire();
-        historique.clear();
+        reinitialiserEtatPartie();
     }
 
     /**
@@ -113,10 +119,7 @@ public class LogiqueSokoban {
             }
             mondeActuel = identifiantRacine;
         }
-
-        coups = 0;
-        victoire = verifierVictoire();
-        historique.clear();
+        reinitialiserEtatPartie();
     }
 
     /**
@@ -144,62 +147,24 @@ public class LogiqueSokoban {
         int nx = joueurX + direction.getDeltaX();
         int ny = joueurY + direction.getDeltaY();
         if (!dansGrille(nx, ny)) {
-            if (essayerSortirVersParent(joueurX, joueurY)) {
-                coups++;
-                victoire = verifierVictoire();
-                pousserHistorique(avantCoup);
-                return true;
-            }
-            return false;
+            return essayerSortiePuisFinalisation(joueurX, joueurY, direction, avantCoup);
         }
 
         char destination = grille[ny][nx];
         if (destination == '#') {
-            if (peutSortirVersParent() && estMurDeBordure(grille, nx, ny)) {
-                if (essayerSortirVersParent(joueurX, joueurY)) {
-                    coups++;
-                    victoire = verifierVictoire();
-                    pousserHistorique(avantCoup);
-                    return true;
-                }
-            }
-            return false;
+            return essayerSortieDepuisMurBordurePuisFinalisation(grille, nx, ny, joueurX, joueurY, direction, avantCoup);
         }
 
         if (estBoiteMondeSurCible(destination)) {
-            if (!essayerEntrerDansMonde(destination, joueurX, joueurY)) {
-                return false;
-            }
-
-            coups++;
-            victoire = verifierVictoire();
-            pousserHistorique(avantCoup);
-            return true;
+            return essayerEntreeMondePuisFinalisation(destination, joueurX, joueurY, direction, avantCoup);
         }
 
         if (estObjetPoussable(destination)) {
-            int bx = nx + direction.getDeltaX();
-            int by = ny + direction.getDeltaY();
-            boolean pousse = false;
-            if (dansGrille(bx, by) && estLibre(grille[by][bx])) {
-                char caseApresObjet = grille[by][bx];
-                grille[by][bx] = convertirObjetPousse(destination, caseApresObjet);
-                grille[ny][nx] = estCelluleSupportCible(destination) ? '+' : '@';
-                pousse = true;
+            int resultatObjet = gererPousseeOuEntreeMonde(grille, destination, nx, ny, joueurX, joueurY, direction, avantCoup);
+            if (resultatObjet == RESULTAT_ECHEC) {
+                return false;
             }
-
-            if (!pousse) {
-                if (!estMonde(destination)) {
-                    return false;
-                }
-
-                if (!essayerEntrerDansMonde(destination, joueurX, joueurY)) {
-                    return false;
-                }
-
-                coups++;
-                victoire = verifierVictoire();
-                pousserHistorique(avantCoup);
+            if (resultatObjet == RESULTAT_FINALISE) {
                 return true;
             }
         } else if (estLibre(destination)) {
@@ -209,7 +174,85 @@ public class LogiqueSokoban {
         }
 
         grille[joueurY][joueurX] = (grille[joueurY][joueurX] == '+') ? '.' : ' ';
+        return finaliserDeplacement(direction, avantCoup);
+    }
+
+    private void reinitialiserEtatPartie() {
+        coups = 0;
+        victoire = verifierVictoire();
+        sequenceCoups.setLength(0);
+        historique.clear();
+    }
+
+    private boolean essayerSortiePuisFinalisation(int joueurX, int joueurY, Direction direction, Instantane avantCoup) {
+        if (!essayerSortirVersParent(joueurX, joueurY)) {
+            return false;
+        }
+        return finaliserDeplacement(direction, avantCoup);
+    }
+
+    private boolean essayerSortieDepuisMurBordurePuisFinalisation(
+        char[][] grille,
+        int nx,
+        int ny,
+        int joueurX,
+        int joueurY,
+        Direction direction,
+        Instantane avantCoup
+    ) {
+        if (!peutSortirVersParent() || !estMurDeBordure(grille, nx, ny)) {
+            return false;
+        }
+        if (!essayerSortirVersParent(joueurX, joueurY)) {
+            return false;
+        }
+        return finaliserDeplacement(direction, avantCoup);
+    }
+
+    private boolean essayerEntreeMondePuisFinalisation(
+        char destination,
+        int joueurX,
+        int joueurY,
+        Direction direction,
+        Instantane avantCoup
+    ) {
+        if (!essayerEntrerDansMonde(destination, joueurX, joueurY)) {
+            return false;
+        }
+        return finaliserDeplacement(direction, avantCoup);
+    }
+
+    private int gererPousseeOuEntreeMonde(
+        char[][] grille,
+        char destination,
+        int nx,
+        int ny,
+        int joueurX,
+        int joueurY,
+        Direction direction,
+        Instantane avantCoup
+    ) {
+        int bx = nx + direction.getDeltaX();
+        int by = ny + direction.getDeltaY();
+        if (dansGrille(bx, by) && estLibre(grille[by][bx])) {
+            char caseApresObjet = grille[by][bx];
+            grille[by][bx] = convertirObjetPousse(destination, caseApresObjet);
+            grille[ny][nx] = estCelluleSupportCible(destination) ? '+' : '@';
+            return RESULTAT_CONTINUER;
+        }
+
+        if (!estMonde(destination)) {
+            return RESULTAT_ECHEC;
+        }
+
+        return essayerEntreeMondePuisFinalisation(destination, joueurX, joueurY, direction, avantCoup)
+            ? RESULTAT_FINALISE
+            : RESULTAT_ECHEC;
+    }
+
+    private boolean finaliserDeplacement(Direction direction, Instantane avantCoup) {
         coups++;
+        sequenceCoups.append(directionVersSymbole(direction));
         victoire = verifierVictoire();
         pousserHistorique(avantCoup);
         return true;
@@ -232,6 +275,7 @@ public class LogiqueSokoban {
         pileMonde = copierPile(precedent.pileMonde);
         coups = precedent.coups;
         victoire = precedent.victoire;
+        sequenceCoups = new StringBuilder(precedent.sequenceCoups == null ? "" : precedent.sequenceCoups);
         return true;
     }
 
@@ -260,6 +304,76 @@ public class LogiqueSokoban {
      */
     public int getCoups() {
         return coups;
+    }
+
+    /**
+     * Retourne les coups au format solution Sokobano (compression simple RLE).
+     */
+    public String exporterCoupsSokobano() {
+        if (sequenceCoups == null || sequenceCoups.length() == 0) {
+            return "";
+        }
+
+        StringBuilder resultat = new StringBuilder();
+        int i = 0;
+        while (i < sequenceCoups.length()) {
+            char mouvement = sequenceCoups.charAt(i);
+            int j = i + 1;
+            while (j < sequenceCoups.length() && sequenceCoups.charAt(j) == mouvement) {
+                j++;
+            }
+
+            int repetition = j - i;
+            if (repetition > 1) {
+                resultat.append(repetition);
+            }
+            resultat.append(mouvement);
+            i = j;
+        }
+
+        return resultat.toString();
+    }
+
+    /**
+     * Rejoue une sequence de coups encodes au format Sokobano (RLE simple, ex: 3r2u).
+     *
+     * @param solutionSokobano sequence des mouvements
+     * @return true si toute la sequence a ete rejouee avec succes
+     */
+    public boolean rejouerCoupsSokobano(String solutionSokobano) {
+        if (solutionSokobano == null || solutionSokobano.isBlank()) {
+            return true;
+        }
+
+        int repetitions = 0;
+        for (int i = 0; i < solutionSokobano.length(); i++) {
+            char c = solutionSokobano.charAt(i);
+
+            if (Character.isWhitespace(c)) {
+                continue;
+            }
+
+            if (Character.isDigit(c)) {
+                repetitions = repetitions * 10 + (c - '0');
+                continue;
+            }
+
+            Direction direction = directionDepuisSymbole(c);
+            if (direction == null) {
+                return false;
+            }
+
+            int total = repetitions > 0 ? repetitions : 1;
+            repetitions = 0;
+
+            for (int n = 0; n < total; n++) {
+                if (!deplacer(direction)) {
+                    return false;
+                }
+            }
+        }
+
+        return repetitions == 0;
     }
 
     /**
@@ -295,8 +409,43 @@ public class LogiqueSokoban {
             mondeActuel,
             copierPile(pileMonde),
             coups,
-            victoire
+            victoire,
+            sequenceCoups == null ? "" : sequenceCoups.toString()
         );
+    }
+
+    private char directionVersSymbole(Direction direction) {
+        if (direction == null) {
+            return 'u';
+        }
+
+        switch (direction) {
+            case HAUT:
+                return 'u';
+            case BAS:
+                return 'd';
+            case GAUCHE:
+                return 'l';
+            case DROITE:
+                return 'r';
+            default:
+                return 'u';
+        }
+    }
+
+    private Direction directionDepuisSymbole(char symbole) {
+        switch (Character.toLowerCase(symbole)) {
+            case 'u':
+                return Direction.HAUT;
+            case 'd':
+                return Direction.BAS;
+            case 'l':
+                return Direction.GAUCHE;
+            case 'r':
+                return Direction.DROITE;
+            default:
+                return null;
+        }
     }
 
     private static char[][] copierGrille(char[][] source) {
