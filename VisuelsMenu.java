@@ -90,6 +90,21 @@ public final class VisuelsMenu {
     }
 
     /**
+     * Construit le bouton réduit de menu (icône hamburger).
+     *
+     * @param texte icône ou libellé
+     * @return bouton stylisé
+     */
+    public static Button creerBoutonMenuReduit(String texte) {
+        Button button = new Button(texte);
+        button.setPrefWidth(60);
+        button.setPrefHeight(50);
+        button.setFont(Font.font("Verdana", FontWeight.BOLD, 22));
+        button.setStyle(STYLE_BOUTON_BASE + "-fx-padding: 3 14 5 14;");
+        return button;
+    }
+
+    /**
      * Met à jour le style du bouton selon son état de surlignage.
      *
      * @param button bouton concerné

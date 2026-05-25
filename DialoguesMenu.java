@@ -1,4 +1,6 @@
 import java.util.List;
+import java.util.ArrayList;
+import java.nio.file.Path;
 
 import javafx.scene.control.Alert;
 import javafx.scene.control.ChoiceDialog;
@@ -10,25 +12,6 @@ import javafx.scene.control.ListView;
  */
 public final class DialoguesMenu {
     private DialoguesMenu() {
-    }
-
-    /**
-     * Ouvre la boîte de sélection de niveau.
-     */
-    public static void ouvrirDialogueNiveau() {
-        List<String> niveaux = ParcourirFichiers.listerFichiers("niveau", ".txt");
-        if (niveaux.isEmpty()) {
-            afficherInfo("Niveau", "Aucun niveau detecte dans le dossier niveau.");
-            return;
-        }
-
-        ChoiceDialog<String> dialog = new ChoiceDialog<>(niveaux.get(0), niveaux);
-        dialog.setTitle("Choix du niveau");
-        dialog.setHeaderText("Selectionne un niveau");
-        dialog.setContentText("Niveau :");
-        dialog.showAndWait().ifPresent(selection -> {
-            afficherInfo("Niveau", "Niveau selectionne : " + selection);
-        });
     }
 
     /**
@@ -48,13 +31,74 @@ public final class DialoguesMenu {
      * Affiche la liste des sauvegardes détectées.
      */
     public static void afficherSauvegardes() {
-        List<String> sauvegardes = ParcourirFichiers.listerFichiers("sauvegardes", null);
-        if (sauvegardes.isEmpty()) {
-            afficherInfo("Sauvegarde", "Aucune sauvegarde disponible.");
-            return;
-        }
+        try {
+            ArrayList<ServicePersistance.SauvegardeInfo> infos = ServicePersistance.listerSauvegardesInfos();
+            if (infos.isEmpty()) {
+                afficherInfo("Sauvegarde", "Aucune sauvegarde disponible.");
+                return;
+            }
 
-        afficherListeInfo("Sauvegardes", "Fichiers detectes", sauvegardes);
+            ArrayList<String> lignes = new ArrayList<>();
+            for (ServicePersistance.SauvegardeInfo info : infos) {
+                lignes.add(info.getNomFichier() + "  |  " + info.getDateModificationFormatee() + "  |  " + info.getTailleOctets() + " octets");
+            }
+            afficherListeInfo("Sauvegardes", "Fichiers detectes", lignes);
+        } catch (Exception e) {
+            afficherInfo("Erreur", "Impossible de lire les sauvegardes.");
+        }
+    }
+
+    /**
+     * Ouvre la boîte de sélection d'action de sauvegarde.
+     *
+     * @return action choisie, ou null si annulé
+     */
+    public static String ouvrirDialogueActionSauvegarde() {
+        List<String> actions = List.of("Sauvegarder", "Charger", "Lister");
+        ChoiceDialog<String> dialog = new ChoiceDialog<>(actions.get(0), actions);
+        dialog.setTitle("Sauvegarde");
+        dialog.setHeaderText("Choisis une action");
+        dialog.setContentText("Action :");
+        return dialog.showAndWait().orElse(null);
+    }
+
+    /**
+     * Ouvre la boîte de sélection d'un fichier de sauvegarde.
+     *
+     * @return chemin choisi, ou null si annulé/indisponible
+     */
+    public static Path ouvrirDialogueChargementSauvegarde() {
+        try {
+            ArrayList<ServicePersistance.SauvegardeInfo> infos = ServicePersistance.listerSauvegardesInfos();
+            if (infos.isEmpty()) {
+                afficherInfo("Sauvegarde", "Aucune sauvegarde disponible.");
+                return null;
+            }
+
+            ArrayList<String> choix = new ArrayList<>();
+            for (ServicePersistance.SauvegardeInfo info : infos) {
+                choix.add(info.getNomFichier());
+            }
+
+            ChoiceDialog<String> dialog = new ChoiceDialog<>(choix.get(0), choix);
+            dialog.setTitle("Chargement");
+            dialog.setHeaderText("Choisis une sauvegarde");
+            dialog.setContentText("Fichier :");
+            String selection = dialog.showAndWait().orElse(null);
+            if (selection == null) {
+                return null;
+            }
+
+            for (ServicePersistance.SauvegardeInfo info : infos) {
+                if (info.getNomFichier().equals(selection)) {
+                    return info.getChemin();
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            afficherInfo("Erreur", "Impossible de lire les sauvegardes.");
+            return null;
+        }
     }
 
     /**
@@ -69,6 +113,16 @@ public final class DialoguesMenu {
                 + "- Taille de fenetre\n"
                 + "- Raccourcis clavier"
         );
+    }
+
+    /**
+     * Affiche un message d'information simple.
+     *
+     * @param titre titre de la boîte
+     * @param message contenu textuel
+     */
+    public static void afficherInformation(String titre, String message) {
+        afficherInfo(titre, message);
     }
 
     /**
