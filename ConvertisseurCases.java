@@ -47,7 +47,7 @@ public final class ConvertisseurCases {
     /**
      * @deprecated Utiliser depuisSymboleTolerant pour eviter les accents dans les API.
      */
-    @Deprecated
+    @Deprecated(since = "1.0", forRemoval = true)
     public static Case depuisSymboleTolérant(char symbole, int x, int y) {
         return depuisSymboleTolerant(symbole, x, y);
     }

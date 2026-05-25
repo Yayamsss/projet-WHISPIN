@@ -1,4 +1,5 @@
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -184,7 +185,7 @@ public final class ControleurPartie {
             currentY = ny;
         }
 
-        return new java.util.ArrayList<>(directions);
+        return new ArrayList<>(directions);
     }
 
     private static Direction directionEntre(int x0, int y0, int x1, int y1) {

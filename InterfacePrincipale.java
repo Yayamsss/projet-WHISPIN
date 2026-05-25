@@ -111,7 +111,7 @@ public class InterfacePrincipale extends Application {
         btnNiveau.setOnAction(event -> chargerNiveauSelectionne());
         btnRegles.setOnAction(event -> ouvrirSceneRegles());
         btnSauvegarde.setOnAction(event -> ouvrirSceneSauvegarde());
-        btnParamettre.setOnAction(event -> gererParametres());
+        btnParametres.setOnAction(event -> gererParametres());
         btnQuitter.setOnAction(event -> {
             sauvegarderEtatCourantAutomatiqueSiPossible();
             Platform.exit();
@@ -122,7 +122,7 @@ public class InterfacePrincipale extends Application {
             btnNiveau,
             btnRegles,
             btnSauvegarde,
-            btnParamettre,
+            btnParametres,
             btnQuitter
         );
 
@@ -452,7 +452,7 @@ public class InterfacePrincipale extends Application {
     private void gererParametres() {
         List<String> personnages = Animation.getPersonnagesDisponibles();
         if (personnages.isEmpty()) {
-            DialoguesMenu.afficherInformation("Paramettre", "Aucun personnage trouve dans assets/player.");
+            DialoguesMenu.afficherInformation("Paramètres", "Aucun personnage trouvé dans assets/player.");
             return;
         }
 
@@ -473,7 +473,7 @@ public class InterfacePrincipale extends Application {
             Animation.getPersonnageActuel(),
             choisi -> {
                 if (!Animation.selectionnerPersonnage(choisi)) {
-                    DialoguesMenu.afficherInformation("Paramettre", "Impossible de charger le personnage choisi.");
+                    DialoguesMenu.afficherInformation("Paramètres", "Impossible de charger le personnage choisi.");
                     return;
                 }
                 dessinerPlateauActuel();

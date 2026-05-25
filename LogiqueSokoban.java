@@ -1,3 +1,8 @@
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 /**
  * Moteur de logique Sokoban : déplacements, poussée de boîtes et victoire.
  */
@@ -7,54 +12,26 @@ public class LogiqueSokoban {
     private static final int RESULTAT_CONTINUER = 1;
     private static final int RESULTAT_FINALISE = 2;
 
-    private static final class ContexteRecursif {
-        private final char mondeParent;
-        private final int xRetour;
-        private final int yRetour;
+    private record ContexteRecursif(char mondeParent, int xRetour, int yRetour) {}
 
-        private ContexteRecursif(char mondeParent, int xRetour, int yRetour) {
-            this.mondeParent = mondeParent;
-            this.xRetour = xRetour;
-            this.yRetour = yRetour;
-        }
-    }
+    private record Instantane(
+        Map<Character, char[][]> mondes,
+        char identifiantRacine,
+        char mondeActuel,
+        List<ContexteRecursif> pileMonde,
+        int coups,
+        boolean victoire,
+        String sequenceCoups
+    ) {}
 
-    private static final class Instantane {
-        private final java.util.LinkedHashMap<Character, char[][]> mondes;
-        private final char identifiantRacine;
-        private final char mondeActuel;
-        private final java.util.ArrayList<ContexteRecursif> pileMonde;
-        private final int coups;
-        private final boolean victoire;
-        private final String sequenceCoups;
-
-        private Instantane(
-            java.util.LinkedHashMap<Character, char[][]> mondes,
-            char identifiantRacine,
-            char mondeActuel,
-            java.util.ArrayList<ContexteRecursif> pileMonde,
-            int coups,
-            boolean victoire,
-            String sequenceCoups
-        ) {
-            this.mondes = mondes;
-            this.identifiantRacine = identifiantRacine;
-            this.mondeActuel = mondeActuel;
-            this.pileMonde = pileMonde;
-            this.coups = coups;
-            this.victoire = victoire;
-            this.sequenceCoups = sequenceCoups;
-        }
-    }
-
-    private java.util.LinkedHashMap<Character, char[][]> mondes;
+    private Map<Character, char[][]> mondes;
     private char identifiantRacine;
     private char mondeActuel;
-    private java.util.ArrayList<ContexteRecursif> pileMonde;
+    private List<ContexteRecursif> pileMonde;
     private int coups;
     private boolean victoire;
     private StringBuilder sequenceCoups;
-    private final java.util.ArrayList<Instantane> historique;
+    private final List<Instantane> historique;
 
     /**
      * Construit un moteur à partir d'un plateau de cases.
@@ -62,9 +39,9 @@ public class LogiqueSokoban {
      * @param plateau plateau source
      */
     public LogiqueSokoban(Case[][] plateau) {
-        historique = new java.util.ArrayList<>();
-        mondes = new java.util.LinkedHashMap<>();
-        pileMonde = new java.util.ArrayList<>();
+        historique = new ArrayList<>();
+        mondes = new LinkedHashMap<>();
+        pileMonde = new ArrayList<>();
         sequenceCoups = new StringBuilder();
         chargerPlateau(plateau);
     }
@@ -73,9 +50,9 @@ public class LogiqueSokoban {
      * Construit un moteur à partir d'un niveau récursif complet.
      */
     public LogiqueSokoban(ChargeurNiveau.NiveauCharge niveau) {
-        historique = new java.util.ArrayList<>();
-        mondes = new java.util.LinkedHashMap<>();
-        pileMonde = new java.util.ArrayList<>();
+        historique = new ArrayList<>();
+        mondes = new LinkedHashMap<>();
+        pileMonde = new ArrayList<>();
         sequenceCoups = new StringBuilder();
         chargerNiveauRecursif(niveau);
     }
@@ -460,18 +437,18 @@ public class LogiqueSokoban {
         return copie;
     }
 
-    private static java.util.LinkedHashMap<Character, char[][]> copierMondes(
-        java.util.LinkedHashMap<Character, char[][]> source
+    private static Map<Character, char[][]> copierMondes(
+        Map<Character, char[][]> source
     ) {
-        java.util.LinkedHashMap<Character, char[][]> copie = new java.util.LinkedHashMap<>();
-        for (java.util.Map.Entry<Character, char[][]> entree : source.entrySet()) {
+        Map<Character, char[][]> copie = new LinkedHashMap<>();
+        for (Map.Entry<Character, char[][]> entree : source.entrySet()) {
             copie.put(entree.getKey(), copierGrille(entree.getValue()));
         }
         return copie;
     }
 
-    private static java.util.ArrayList<ContexteRecursif> copierPile(java.util.ArrayList<ContexteRecursif> source) {
-        java.util.ArrayList<ContexteRecursif> copie = new java.util.ArrayList<>(source.size());
+    private static List<ContexteRecursif> copierPile(List<ContexteRecursif> source) {
+        List<ContexteRecursif> copie = new ArrayList<>(source.size());
         for (ContexteRecursif contexte : source) {
             copie.add(new ContexteRecursif(contexte.mondeParent, contexte.xRetour, contexte.yRetour));
         }
