@@ -8,7 +8,7 @@ Le jeu combine:
 - un mode recursif avec mondes imbriques,
 - une interface graphique JavaFX,
 - une persistance JSON des parties,
-- des tests automatises de non-regression.
+- des tests automatises.
 
 ## Fonctionnalites principales
 

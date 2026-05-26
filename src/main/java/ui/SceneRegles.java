@@ -39,16 +39,22 @@ public final class SceneRegles {
         VBox entete = new VBox(8, titre, sousTitre);
         panneau.setTop(entete);
 
-        String contenu = "But : pousser toutes les boites sur les cibles.\n\n"
-            + "Controles clavier :\n"
-            + "- Fleches / ZQSD pour se deplacer\n"
-            + "- CTRL+Z pour annuler le dernier coup\n"
-            + "- CTRL+S pour sauvegarder pendant une partie\n"
-            + "- ESC pour revenir au menu principal\n\n"
-            + "Regles Sokoban :\n"
-            + "- Une seule boite peut etre poussee a la fois\n"
-            + "- Les murs bloquent les deplacements\n"
-            + "- La victoire arrive quand toutes les boites sont sur des cibles.";
+        String contenu = """
+            Notre Jardinier est perdu au milieu d'un terrain en friche.
+            Aide-le a faire pousser ses arbres en arrosant chaque carre de terre.
+
+            Pour reussir, tu auras besoin de pluie, d'un bon placement et d'un peu de logique :
+            - Pousse les nuages jusqu'aux cases de terre pour faire grandir les arbres
+            - Tu ne peux pousser qu'un seul nuage a la fois
+            - Les murs et les obstacles bloquent le passage
+            - Le niveau est termine quand tous les arbres ont pousse sur leur carre
+
+            Controles clavier :
+            - Fleches / ZQSD pour te deplacer
+            - CTRL+Z pour annuler le dernier coup
+            - CTRL+S pour sauvegarder pendant une partie
+            - ESC pour revenir au menu principal
+            """;
 
         Label texteRegles = new Label(contenu);
         texteRegles.setWrapText(true);
